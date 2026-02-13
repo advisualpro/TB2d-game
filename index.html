@@ -7,26 +7,24 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#0e1a0e;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
-canvas{display:block;touch-action:none}
-/* ── HUD ── */
-#hud{position:fixed;top:0;left:0;width:100%;display:none;padding:8px 12px;z-index:20;pointer-events:none}
-#hud-row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+canvas{display:block;position:absolute;top:0;left:0;z-index:1;touch-action:none}
+#ui{position:absolute;top:0;left:0;width:100%;pointer-events:none;z-index:10}
+#hud{display:none;padding:12px 16px}
+#hud-row{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
 .hud-pill{background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:5px 14px;color:#fff;font-size:13px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:4px}
 .hud-pill .ic{font-size:16px}
 #timer-bar{width:100%;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:6px;overflow:hidden}
 #timer-fill{height:100%;background:linear-gradient(90deg,#51cf66,#ffd43b,#ff6b6b);border-radius:2px;transition:width .3s}
-/* ── TOOLBAR ── */
-#toolbar{position:fixed;bottom:0;left:0;width:100%;z-index:20;display:none;pointer-events:auto}
-#tool-row{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.08);overflow-x:auto;-webkit-overflow-scrolling:touch}
-.tool-btn{min-width:56px;height:56px;border-radius:14px;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all .15s;flex-shrink:0}
-.tool-btn .tico{font-size:22px}
-.tool-btn .tcnt{font-size:10px;opacity:.6}
+#toolbar{position:fixed;bottom:0;left:0;width:100%;z-index:20;display:none}
+#tool-row{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.08);overflow-x:auto;-webkit-overflow-scrolling:touch;pointer-events:auto}
+.tool-btn{min-width:52px;height:54px;border-radius:14px;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .15s;flex-shrink:0;pointer-events:auto}
+.tool-btn .tico{font-size:20px}
+.tool-btn .tcnt{font-size:9px;opacity:.6}
 .tool-btn:active{transform:scale(.9)}
-.tool-btn.active{border-color:#ffd43b;background:rgba(255,212,59,.15);box-shadow:0 0 12px rgba(255,212,59,.2)}
-#go-btn{min-width:68px;background:linear-gradient(135deg,#51cf66,#2b8a3e);border-color:rgba(255,255,255,.2);font-size:13px;box-shadow:0 4px 16px rgba(43,138,62,.4)}
-#go-btn.running{background:linear-gradient(135deg,#ff6b6b,#c92a2a)}
-/* ── SCREENS ── */
-.overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto}
+.tool-btn.active{border-color:#ffd43b;background:rgba(255,212,59,.18);box-shadow:0 0 12px rgba(255,212,59,.2)}
+#go-btn{min-width:64px;background:linear-gradient(135deg,#51cf66,#2b8a3e)!important;border-color:rgba(255,255,255,.25)!important;font-size:12px;box-shadow:0 4px 16px rgba(43,138,62,.4)}
+#go-btn.running{background:linear-gradient(135deg,#ff6b6b,#c92a2a)!important}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center}
 #scr-menu{background:linear-gradient(135deg,#0e2a0e 0%,#1a4a2a 40%,#2a6a3a 100%)}
 #scr-win{background:rgba(15,50,15,.94);display:none}
 #scr-lose{background:rgba(50,10,10,.94);display:none}
@@ -35,7 +33,7 @@ canvas{display:block;touch-action:none}
 .title-main{color:#ffd43b;text-shadow:0 0 40px rgba(255,212,59,.4),0 4px 12px rgba(0,0,0,.5)}
 .title-win{color:#51cf66}.title-lose{color:#ff6b6b}
 .sub{font-size:clamp(12px,3.2vw,16px);color:rgba(255,255,255,.65);text-align:center;padding:0 24px;line-height:1.5;margin-bottom:24px}
-.btn{min-width:180px;padding:13px 24px;border:none;border-radius:16px;font-size:clamp(14px,3.5vw,18px);font-weight:800;cursor:pointer;transition:transform .15s;text-transform:uppercase;letter-spacing:.5px;margin:5px}
+.btn{min-width:180px;padding:13px 24px;border:none;border-radius:16px;font-size:clamp(14px,3.5vw,18px);font-weight:800;cursor:pointer;transition:transform .15s;text-transform:uppercase;letter-spacing:.5px;margin:5px;pointer-events:auto;position:relative;z-index:31}
 .btn:active{transform:scale(.94)}
 .btn-go{background:linear-gradient(135deg,#51cf66,#2b8a3e);color:#fff;box-shadow:0 6px 24px rgba(43,138,62,.4)}
 .btn-retry{background:linear-gradient(135deg,#ff6b6b,#c92a2a);color:#fff}
@@ -43,74 +41,69 @@ canvas{display:block;touch-action:none}
 .stars-row{font-size:clamp(28px,8vw,48px);margin:8px 0}
 .stat-txt{color:rgba(255,255,255,.75);font-size:14px;margin:3px 0}
 .lvl-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:16px;max-width:380px;width:100%}
-.lvl-btn{aspect-ratio:1;border-radius:14px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:18px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .12s}
+.lvl-btn{aspect-ratio:1;border-radius:14px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:18px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .12s;pointer-events:auto;position:relative;z-index:31}
 .lvl-btn:active{transform:scale(.9)}
 .lvl-btn.locked{opacity:.3;pointer-events:none}
 .lvl-btn .ms{font-size:9px;margin-top:2px}
-/* ghost preview */
-#ghost-info{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);color:#ffd43b;padding:10px 20px;border-radius:12px;font-size:14px;font-weight:700;z-index:25;display:none;pointer-events:none;text-align:center}
-/* tutorial */
 #tut{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 18px;border-radius:14px;font-size:13px;font-weight:600;z-index:22;display:none;text-align:center;max-width:90%;line-height:1.4;pointer-events:none}
+.float-txt{position:absolute;color:#ffd43b;font-weight:800;font-size:18px;pointer-events:none;z-index:25;text-shadow:0 2px 6px rgba(0,0,0,.5);animation:floatUp .8s ease-out forwards}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-40px)}}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 
-<div id="hud">
- <div id="hud-row">
-  <div class="hud-pill"><span class="ic">🐿️</span><span id="h-alive">5</span></div>
-  <div class="hud-pill"><span class="ic">🏔️</span>Ур.<span id="h-lvl">1</span></div>
-  <div class="hud-pill"><span class="ic">🏁</span><span id="h-saved">0</span>/<span id="h-need">3</span></div>
-  <div class="hud-pill"><span class="ic">⏱️</span><span id="h-time">30</span>с</div>
+<div id="ui">
+ <div id="hud">
+  <div id="hud-row">
+   <div class="hud-pill"><span class="ic">🐿️</span><span id="h-alive">5</span></div>
+   <div class="hud-pill"><span class="ic">🏔️</span>Ур.<span id="h-lvl">1</span></div>
+   <div class="hud-pill"><span class="ic">🏁</span><span id="h-saved">0</span>/<span id="h-need">3</span></div>
+   <div class="hud-pill"><span class="ic">⏱️</span><span id="h-time">30</span>с</div>
+  </div>
+  <div id="timer-bar"><div id="timer-fill" style="width:100%"></div></div>
  </div>
- <div id="timer-bar"><div id="timer-fill" style="width:100%"></div></div>
 </div>
 
 <div id="toolbar">
  <div id="tool-row"></div>
 </div>
 
-<div id="ghost-info"></div>
 <div id="tut"></div>
 
-<!-- MENU -->
 <div class="overlay" id="scr-menu">
  <div style="font-size:60px;margin-bottom:4px">🐿️</div>
  <div class="title title-main">БЕЛКИН ХАОС</div>
  <div class="sub">Расставь предметы, чтобы белки добрались до ореха!<br>Думай, строй, запускай — спаси как можно больше!</div>
- <button class="btn btn-go" onclick="showLevels()">ИГРАТЬ</button>
+ <button class="btn btn-go" id="btn-play">ИГРАТЬ</button>
 </div>
 
-<!-- LEVELS -->
 <div class="overlay" id="scr-levels">
  <div class="title title-main" style="font-size:clamp(20px,5vw,30px);margin-top:16px">УРОВНИ</div>
  <div class="lvl-grid" id="lvl-grid"></div>
- <button class="btn btn-ghost" style="margin:14px 0 28px" onclick="showMenu()">НАЗАД</button>
+ <button class="btn btn-ghost" id="btn-back-menu">НАЗАД</button>
 </div>
 
-<!-- WIN -->
 <div class="overlay" id="scr-win">
  <div style="font-size:50px">🎉</div>
  <div class="title title-win">УРОВЕНЬ ПРОЙДЕН!</div>
  <div class="stars-row" id="w-stars"></div>
  <div class="stat-txt" id="w-stat"></div>
- <button class="btn btn-go" onclick="nextLvl()">ДАЛЬШЕ</button>
- <button class="btn btn-ghost" onclick="showLevels()">УРОВНИ</button>
+ <button class="btn btn-go" id="btn-next">ДАЛЬШЕ</button>
+ <button class="btn btn-ghost" id="btn-win-lvls">УРОВНИ</button>
 </div>
 
-<!-- LOSE -->
 <div class="overlay" id="scr-lose">
  <div style="font-size:50px">💀</div>
  <div class="title title-lose">БЕЛКИ НЕ ДОШЛИ</div>
  <div class="sub" id="l-sub"></div>
- <button class="btn btn-retry" onclick="restartLvl()">ЗАНОВО</button>
- <button class="btn btn-ghost" onclick="showLevels()">УРОВНИ</button>
+ <button class="btn btn-retry" id="btn-retry">ЗАНОВО</button>
+ <button class="btn btn-ghost" id="btn-lose-lvls">УРОВНИ</button>
 </div>
 
 <script>
 /* ════════════════════════════════════════
-   БЕЛКИН ХАОС — Physics Puzzle Builder
-   Single-file HTML game
+   БЕЛКИН ХАОС — Physics Puzzle Builder v2
    ════════════════════════════════════════ */
 
 const C=document.getElementById('c'),X=C.getContext('2d');
@@ -124,44 +117,38 @@ function resize(){
 }
 addEventListener('resize',resize);resize();
 
-/* ══════ PHYSICS ENGINE (simplified Box2D-like) ══════ */
-const GRAV=0.35, DRAG=0.999, ANG_DRAG=0.98, BOUNCE_C=0.3, FRIC_C=0.85;
+/* ══════ PHYSICS ══════ */
+const GRAV=0.35,DRAG=0.999,BOUNCE_C=0.3,FRIC_C=0.85;
 
 class Body{
   constructor(x,y,w,h,opts={}){
     this.x=x;this.y=y;this.w=w;this.h=h;
     this.vx=0;this.vy=0;
     this.angle=opts.angle||0;this.angVel=0;
-    this.static=opts.static||false;
-    this.type=opts.type||'rect';
-    this.mass=opts.static?Infinity:(w*h*0.01);
-    this.invMass=opts.static?0:1/this.mass;
+    this.isStatic=opts.isStatic!==undefined?opts.isStatic:true;
+    this.mass=this.isStatic?Infinity:(w*h*0.01);
+    this.invMass=this.isStatic?0:1/this.mass;
     this.restitution=opts.bounce||BOUNCE_C;
     this.friction=opts.friction||FRIC_C;
     this.color=opts.color||'#8B6914';
     this.label=opts.label||'';
     this.removed=false;
-    // for special types
     this.isBouncy=opts.isBouncy||false;
-    this.isPortalA=opts.isPortalA||false;
-    this.isPortalB=opts.isPortalB||false;
     this.isBalloon=opts.isBalloon||false;
   }
   getAABB(){
-    // simplified — axis-aligned bounding box ignoring rotation for broadphase
-    let hw=this.w/2, hh=this.h/2;
-    let cos=Math.abs(Math.cos(this.angle)), sin=Math.abs(Math.sin(this.angle));
-    let ex=hw*cos+hh*sin, ey=hw*sin+hh*cos;
+    let hw=this.w/2,hh=this.h/2;
+    let co=Math.abs(Math.cos(this.angle)),si=Math.abs(Math.sin(this.angle));
+    let ex=hw*co+hh*si,ey=hw*si+hh*co;
     return{minX:this.x-ex,maxX:this.x+ex,minY:this.y-ey,maxY:this.y+ey};
   }
   getCorners(){
-    let hw=this.w/2, hh=this.h/2;
-    let c=Math.cos(this.angle), s=Math.sin(this.angle);
+    let hw=this.w/2,hh=this.h/2,co=Math.cos(this.angle),si=Math.sin(this.angle);
     return[
-      {x:this.x+(-hw*c-(-hh)*s), y:this.y+(-hw*s+(-hh)*c)},
-      {x:this.x+(hw*c-(-hh)*s),  y:this.y+(hw*s+(-hh)*c)},
-      {x:this.x+(hw*c-hh*s),     y:this.y+(hw*s+hh*c)},
-      {x:this.x+(-hw*c-hh*s),    y:this.y+(-hw*s+hh*c)}
+      {x:this.x+(-hw*co-(-hh)*si),y:this.y+(-hw*si+(-hh)*co)},
+      {x:this.x+(hw*co-(-hh)*si),y:this.y+(hw*si+(-hh)*co)},
+      {x:this.x+(hw*co-hh*si),y:this.y+(hw*si+hh*co)},
+      {x:this.x+(-hw*co-hh*si),y:this.y+(-hw*si+hh*co)}
     ];
   }
 }
@@ -170,72 +157,50 @@ function aabbOverlap(a,b){
   let aa=a.getAABB(),bb=b.getAABB();
   return aa.minX<bb.maxX&&aa.maxX>bb.minX&&aa.minY<bb.maxY&&aa.maxY>bb.minY;
 }
-
-// SAT collision for rotated rects
 function getAxes(corners){
   let axes=[];
   for(let i=0;i<corners.length;i++){
     let j=(i+1)%corners.length;
-    let edge={x:corners[j].x-corners[i].x, y:corners[j].y-corners[i].y};
-    let len=Math.sqrt(edge.x*edge.x+edge.y*edge.y)||1;
-    axes.push({x:-edge.y/len, y:edge.x/len});
+    let ex=corners[j].x-corners[i].x,ey=corners[j].y-corners[i].y;
+    let len=Math.sqrt(ex*ex+ey*ey)||1;
+    axes.push({x:-ey/len,y:ex/len});
   }
   return axes;
 }
 function project(corners,axis){
-  let min=Infinity,max=-Infinity;
-  for(let c of corners){
-    let d=c.x*axis.x+c.y*axis.y;
-    if(d<min)min=d;if(d>max)max=d;
-  }
-  return{min,max};
+  let mn=Infinity,mx=-Infinity;
+  for(let c of corners){let d=c.x*axis.x+c.y*axis.y;if(d<mn)mn=d;if(d>mx)mx=d}
+  return{min:mn,max:mx};
 }
 function satTest(a,b){
-  let ca=a.getCorners(), cb=b.getCorners();
+  let ca=a.getCorners(),cb=b.getCorners();
   let axes=[...getAxes(ca),...getAxes(cb)];
-  let minOverlap=Infinity, minAxis=null;
+  let minOv=Infinity,minAx=null;
   for(let ax of axes){
-    let pa=project(ca,ax), pb=project(cb,ax);
-    let overlap=Math.min(pa.max-pb.min, pb.max-pa.min);
-    if(overlap<=0)return null;
-    if(overlap<minOverlap){minOverlap=overlap;minAxis={...ax}}
+    let pa=project(ca,ax),pb=project(cb,ax);
+    let ov=Math.min(pa.max-pb.min,pb.max-pa.min);
+    if(ov<=0)return null;
+    if(ov<minOv){minOv=ov;minAx={...ax}}
   }
-  // ensure axis points from a to b
-  let dx=b.x-a.x, dy=b.y-a.y;
-  if(dx*minAxis.x+dy*minAxis.y<0){minAxis.x*=-1;minAxis.y*=-1}
-  return{overlap:minOverlap, axis:minAxis};
+  let dx=b.x-a.x,dy=b.y-a.y;
+  if(dx*minAx.x+dy*minAx.y<0){minAx.x*=-1;minAx.y*=-1}
+  return{overlap:minOv,axis:minAx};
 }
-
 function resolveCollision(a,b,info){
   if(!info)return;
   let {overlap,axis}=info;
-  let totalInv=a.invMass+b.invMass;
-  if(totalInv===0)return;
-  // separate
-  let sep=overlap/(totalInv)*1.01;
-  a.x-=axis.x*sep*a.invMass;
-  a.y-=axis.y*sep*a.invMass;
-  b.x+=axis.x*sep*b.invMass;
-  b.y+=axis.y*sep*b.invMass;
-  // relative velocity along normal
-  let rvx=b.vx-a.vx, rvy=b.vy-a.vy;
+  let ti=a.invMass+b.invMass;if(ti===0)return;
+  let sep=overlap/ti*1.01;
+  a.x-=axis.x*sep*a.invMass;a.y-=axis.y*sep*a.invMass;
+  b.x+=axis.x*sep*b.invMass;b.y+=axis.y*sep*b.invMass;
+  let rvx=b.vx-a.vx,rvy=b.vy-a.vy;
   let relN=rvx*axis.x+rvy*axis.y;
-  if(relN>0)return; // separating
+  if(relN>0)return;
   let e=Math.min(a.restitution,b.restitution);
   if(a.isBouncy||b.isBouncy)e=0.85;
-  let j=-(1+e)*relN/totalInv;
-  a.vx-=j*a.invMass*axis.x;
-  a.vy-=j*a.invMass*axis.y;
-  b.vx+=j*b.invMass*axis.x;
-  b.vy+=j*b.invMass*axis.y;
-  // friction
-  let tvx=rvx-relN*axis.x, tvy=rvy-relN*axis.y;
-  let tLen=Math.sqrt(tvx*tvx+tvy*tvy)||1;
-  let fric=Math.min(a.friction,b.friction)*0.3;
-  a.vx+=tvx/tLen*fric*a.invMass;
-  a.vy+=tvy/tLen*fric*a.invMass;
-  b.vx-=tvx/tLen*fric*b.invMass;
-  b.vy-=tvy/tLen*fric*b.invMass;
+  let j=-(1+e)*relN/ti;
+  a.vx-=j*a.invMass*axis.x;a.vy-=j*a.invMass*axis.y;
+  b.vx+=j*b.invMass*axis.x;b.vy+=j*b.invMass*axis.y;
 }
 
 /* ══════ GAME WORLD ══════ */
@@ -246,603 +211,606 @@ class Squirrel{
     this.x=x;this.y=y;this.vx=0;this.vy=0;
     this.r=10;this.alive=true;this.saved=false;
     this.onGround=false;this.delay=delay;this.active=false;
-    this.facingR=true;
-    this.walkSpeed=1.2+Math.random()*0.4;
+    this.facingR=true;this.walkSpeed=1.1+Math.random()*0.5;
     this.color=`hsl(${25+Math.random()*20},${75+Math.random()*15}%,${50+Math.random()*15}%)`;
-    this.tailP=Math.random()*6.28;
-    this.blinkT=100+Math.random()*150|0;
-    this.jumpCool=0;
-    // simple AI state
-    this.aiTimer=0;
-    this.stuckTimer=0;
-    this.lastX=x;
-    this.jumped=false;
+    this.tailP=Math.random()*6.28;this.blinkT=100+Math.random()*150|0;
+    this.jumpCool=0;this.aiTimer=0;this.stuckTimer=0;this.lastX=x;
+    this.deadTimer=60;
   }
 }
 
-function addParticle(x,y,color,n,spread){
+function addPart(x,y,color,n,sp){
   for(let i=0;i<(n||6);i++){
-    let a=Math.random()*6.28, sp=1+Math.random()*(spread||3);
-    world.particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,life:25+Math.random()*25,maxLife:50,r:1.5+Math.random()*3,color});
+    let a=Math.random()*6.28,v=1+Math.random()*(sp||3);
+    world.particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-1.5,life:25+Math.random()*25,maxLife:50,r:1.5+Math.random()*3,color});
   }
 }
 
-/* ══════ LEVEL DEFINITIONS ══════ */
-// Each level: platforms (static bodies), hazards, goal (nut/hole), spawn, squirrelCount, needSaved, 
-// toolbox: which items player can place and how many
-// planTime: seconds to plan before auto-start
-
+/* ══════ LEVELS ══════ */
 const LEVELS=[
-  {// 1 — TUTORIAL: bridge the gap
-    name:'Мостик', bg:'forest', squirrels:5, need:3, planTime:25,
-    spawn:{x:80,y:260},
-    goal:{x:700,y:328},
-    platforms:[
-      {x:150,y:340,w:300,h:30},// left ground
-      {x:550,y:340,w:300,h:30},// right ground (gap in middle)
-    ],
-    hazards:[
-      {x:350,y:380,w:100,h:20,type:'water'},
-    ],
-    toolbox:{plank:3,box:2}
-  },
-  {// 2 — Stairs
-    name:'Лесенка', bg:'forest', squirrels:6, need:3, planTime:30,
-    spawn:{x:60,y:130},
-    goal:{x:680,y:328},
-    platforms:[
-      {x:120,y:200,w:120,h:20},
-      {x:550,y:340,w:300,h:30},
-    ],
-    hazards:[
-      {x:280,y:380,w:200,h:20,type:'water'},
-    ],
-    toolbox:{plank:4,box:3}
-  },
-  {// 3 — Over the spikes
-    name:'Через шипы', bg:'forest', squirrels:6, need:4, planTime:30,
-    spawn:{x:60,y:260},
-    goal:{x:700,y:260},
-    platforms:[
-      {x:150,y:340,w:200,h:30},
-      {x:350,y:340,w:100,h:30},
-      {x:550,y:340,w:200,h:30},
-    ],
-    hazards:[
-      {x:310,y:322,w:80,h:18,type:'spike'},
-    ],
-    toolbox:{plank:3,box:1,trampoline:1}
-  },
-  {// 4 — Canyon
-    name:'Каньон', bg:'factory', squirrels:7, need:4, planTime:35,
-    spawn:{x:60,y:160},
-    goal:{x:720,y:308},
-    platforms:[
-      {x:120,y:220,w:140,h:20},
-      {x:380,y:280,w:80,h:20},
-      {x:600,y:340,w:260,h:30},
-    ],
-    hazards:[
-      {x:200,y:380,w:300,h:20,type:'water'},
-    ],
-    toolbox:{plank:5,box:3,trampoline:1}
-  },
-  {// 5 — Two-tier
-    name:'Два яруса', bg:'factory', squirrels:8, need:5, planTime:35,
-    spawn:{x:50,y:100},
-    goal:{x:730,y:308},
-    platforms:[
-      {x:100,y:160,w:100,h:16},
-      {x:300,y:220,w:120,h:16},
-      {x:500,y:160,w:100,h:16},
-      {x:620,y:340,w:200,h:30},
-    ],
-    hazards:[
-      {x:350,y:380,w:150,h:20,type:'water'},
-      {x:420,y:302,w:60,h:18,type:'spike'},
-    ],
-    toolbox:{plank:5,box:4,trampoline:2}
-  },
-  {// 6 — Tall cliff
-    name:'Обрыв', bg:'circus', squirrels:8, need:5, planTime:40,
-    spawn:{x:60,y:60},
-    goal:{x:700,y:328},
-    platforms:[
-      {x:100,y:120,w:100,h:16},
-      {x:250,y:200,w:80,h:16},
-      {x:130,y:280,w:100,h:16},
-      {x:550,y:340,w:300,h:30},
-    ],
-    hazards:[
-      {x:300,y:380,w:200,h:20,type:'water'},
-      {x:270,y:322,w:60,h:18,type:'spike'},
-    ],
-    toolbox:{plank:6,box:4,trampoline:2,balloon:1}
-  },
-  {// 7 — Zig-zag
-    name:'Зигзаг', bg:'circus', squirrels:9, need:5, planTime:40,
-    spawn:{x:50,y:60},
-    goal:{x:720,y:328},
-    platforms:[
-      {x:80,y:120,w:120,h:16},
-      {x:320,y:180,w:100,h:16},
-      {x:120,y:240,w:100,h:16},
-      {x:350,y:300,w:80,h:16},
-      {x:560,y:340,w:280,h:30},
-    ],
-    hazards:[
-      {x:200,y:162,w:50,h:18,type:'spike'},
-      {x:420,y:380,w:120,h:20,type:'water'},
-    ],
-    toolbox:{plank:6,box:5,trampoline:2,balloon:1}
-  },
-  {// 8 — Fortress
-    name:'Крепость', bg:'kitchen', squirrels:10, need:6, planTime:45,
-    spawn:{x:60,y:260},
-    goal:{x:720,y:148},
-    platforms:[
-      {x:150,y:340,w:600,h:30},
-      {x:500,y:220,w:160,h:16},
-      {x:620,y:160,w:120,h:16},
-    ],
-    hazards:[
-      {x:300,y:322,w:80,h:18,type:'spike'},
-      {x:500,y:322,w:60,h:18,type:'spike'},
-    ],
-    toolbox:{plank:6,box:5,trampoline:3,balloon:2}
-  },
-  {// 9 — The Maze
-    name:'Лабиринт', bg:'kitchen', squirrels:10, need:6, planTime:50,
-    spawn:{x:50,y:60},
-    goal:{x:720,y:328},
-    platforms:[
-      {x:80,y:120,w:100,h:14},
-      {x:280,y:120,w:14,h:100},// wall
-      {x:280,y:180,w:120,h:14},
-      {x:450,y:120,w:14,h:80},
-      {x:450,y:160,w:100,h:14},
-      {x:200,y:260,w:140,h:14},
-      {x:420,y:280,w:100,h:14},
-      {x:580,y:340,w:260,h:30},
-    ],
-    hazards:[
-      {x:160,y:162,w:40,h:14,type:'spike'},
-      {x:350,y:260,w:50,h:20,type:'water'},
-    ],
-    toolbox:{plank:7,box:6,trampoline:3,balloon:2}
-  },
-  {// 10 — BOSS
-    name:'Финал', bg:'space', squirrels:12, need:8, planTime:60,
-    spawn:{x:40,y:40},
-    goal:{x:740,y:328},
-    platforms:[
-      {x:80,y:100,w:80,h:14},
-      {x:220,y:160,w:60,h:14},
-      {x:100,y:230,w:80,h:14},
-      {x:280,y:280,w:80,h:14},
-      {x:400,y:200,w:60,h:14},
-      {x:500,y:260,w:60,h:14},
-      {x:600,y:340,w:240,h:30},
-    ],
-    hazards:[
-      {x:160,y:142,w:40,h:14,type:'spike'},
-      {x:350,y:380,w:140,h:20,type:'water'},
-      {x:460,y:322,w:60,h:18,type:'spike'},
-    ],
-    toolbox:{plank:8,box:6,trampoline:4,balloon:3}
-  }
+  {name:'Мостик',bg:'forest',squirrels:5,need:3,planTime:30,
+    spawn:{x:80,y:280},goal:{x:680,y:308},
+    platforms:[{x:0,y:340,w:280,h:30},{x:520,y:340,w:280,h:30}],
+    hazards:[{x:280,y:360,w:240,h:30,type:'water'}],
+    toolbox:{plank:3,box:2}},
+  {name:'Лесенка',bg:'forest',squirrels:6,need:3,planTime:30,
+    spawn:{x:60,y:150},goal:{x:680,y:308},
+    platforms:[{x:0,y:200,w:140,h:18},{x:520,y:340,w:280,h:30}],
+    hazards:[{x:200,y:360,w:260,h:30,type:'water'}],
+    toolbox:{plank:4,box:3}},
+  {name:'Через шипы',bg:'forest',squirrels:6,need:4,planTime:30,
+    spawn:{x:60,y:280},goal:{x:700,y:280},
+    platforms:[{x:0,y:340,w:240,h:30},{x:300,y:340,w:100,h:30},{x:460,y:340,w:340,h:30}],
+    hazards:[{x:260,y:322,w:40,h:18,type:'spike'},{x:400,y:322,w:60,h:18,type:'spike'}],
+    toolbox:{plank:3,box:2,trampoline:1}},
+  {name:'Каньон',bg:'factory',squirrels:7,need:4,planTime:35,
+    spawn:{x:60,y:170},goal:{x:700,y:308},
+    platforms:[{x:0,y:220,w:160,h:18},{x:340,y:280,w:90,h:16},{x:540,y:340,w:260,h:30}],
+    hazards:[{x:160,y:360,w:340,h:30,type:'water'}],
+    toolbox:{plank:5,box:3,trampoline:1}},
+  {name:'Два яруса',bg:'factory',squirrels:8,need:5,planTime:35,
+    spawn:{x:50,y:120},goal:{x:720,y:308},
+    platforms:[{x:0,y:170,w:120,h:16},{x:260,y:230,w:130,h:16},{x:460,y:170,w:110,h:16},{x:580,y:340,w:220,h:30}],
+    hazards:[{x:300,y:360,w:200,h:30,type:'water'},{x:410,y:322,w:50,h:18,type:'spike'}],
+    toolbox:{plank:5,box:4,trampoline:2}},
+  {name:'Обрыв',bg:'circus',squirrels:8,need:5,planTime:40,
+    spawn:{x:60,y:70},goal:{x:700,y:308},
+    platforms:[{x:0,y:130,w:110,h:16},{x:200,y:210,w:90,h:16},{x:80,y:290,w:110,h:16},{x:500,y:340,w:300,h:30}],
+    hazards:[{x:250,y:360,w:200,h:30,type:'water'},{x:220,y:322,w:50,h:18,type:'spike'}],
+    toolbox:{plank:6,box:4,trampoline:2,balloon:1}},
+  {name:'Зигзаг',bg:'circus',squirrels:9,need:5,planTime:40,
+    spawn:{x:50,y:70},goal:{x:720,y:308},
+    platforms:[{x:0,y:130,w:120,h:16},{x:280,y:190,w:100,h:16},{x:80,y:250,w:110,h:16},{x:300,y:310,w:90,h:16},{x:520,y:340,w:280,h:30}],
+    hazards:[{x:160,y:172,w:40,h:16,type:'spike'},{x:380,y:360,w:100,h:30,type:'water'}],
+    toolbox:{plank:6,box:5,trampoline:2,balloon:1}},
+  {name:'Крепость',bg:'kitchen',squirrels:10,need:6,planTime:45,
+    spawn:{x:60,y:280},goal:{x:720,y:148},
+    platforms:[{x:0,y:340,w:600,h:30},{x:460,y:230,w:160,h:16},{x:580,y:160,w:140,h:16}],
+    hazards:[{x:260,y:322,w:70,h:18,type:'spike'},{x:450,y:322,w:50,h:18,type:'spike'}],
+    toolbox:{plank:6,box:5,trampoline:3,balloon:2}},
+  {name:'Лабиринт',bg:'kitchen',squirrels:10,need:6,planTime:50,
+    spawn:{x:50,y:70},goal:{x:720,y:308},
+    platforms:[{x:0,y:130,w:110,h:14},{x:240,y:130,w:14,h:90},{x:240,y:190,w:120,h:14},{x:410,y:130,w:14,h:70},{x:410,y:170,w:100,h:14},{x:160,y:270,w:140,h:14},{x:380,y:290,w:100,h:14},{x:540,y:340,w:260,h:30}],
+    hazards:[{x:130,y:172,w:40,h:14,type:'spike'},{x:310,y:270,w:50,h:20,type:'water'}],
+    toolbox:{plank:7,box:6,trampoline:3,balloon:2}},
+  {name:'Финал',bg:'space',squirrels:12,need:8,planTime:60,
+    spawn:{x:40,y:50},goal:{x:740,y:308},
+    platforms:[{x:0,y:110,w:90,h:14},{x:180,y:170,w:70,h:14},{x:60,y:240,w:90,h:14},{x:240,y:290,w:80,h:14},{x:360,y:210,w:70,h:14},{x:460,y:270,w:70,h:14},{x:560,y:340,w:240,h:30}],
+    hazards:[{x:120,y:152,w:40,h:14,type:'spike'},{x:310,y:360,w:140,h:30,type:'water'},{x:420,y:322,w:50,h:18,type:'spike'}],
+    toolbox:{plank:8,box:6,trampoline:4,balloon:3}}
 ];
 
-/* ══════ ITEM DEFINITIONS ══════ */
 const ITEMS={
-  plank: {name:'Доска',icon:'📏',w:80,h:10,color:'#b5813c',desc:'Мост, пандус, стена',rotatable:true},
-  box:   {name:'Ящик',icon:'📦',w:28,h:28,color:'#a67c52',desc:'Ступенька, подпорка',rotatable:false},
-  trampoline:{name:'Батут',icon:'🔵',w:50,h:8,color:'#4dabf7',desc:'Подбрасывает вверх',rotatable:false,bouncy:true},
-  balloon:{name:'Шарик',icon:'🎈',w:20,h:20,color:'#ff6b6b',desc:'Поднимает вверх',rotatable:false,isBalloon:true},
+  plank:{name:'Доска',icon:'📏',w:80,h:10,color:'#b5813c',rotatable:true},
+  box:{name:'Ящик',icon:'📦',w:28,h:28,color:'#a67c52',rotatable:false},
+  trampoline:{name:'Батут',icon:'🔵',w:50,h:8,color:'#4dabf7',rotatable:false,bouncy:true},
+  balloon:{name:'Шарик',icon:'🎈',w:20,h:20,color:'#ff6b6b',rotatable:false,isBalloon:true},
 };
 
-/* ══════ GAME STATE ══════ */
+/* ══════ STATE ══════ */
 let G={
-  phase:'menu', // menu, plan, run, win, lose
-  lvl:0,
-  cam:{x:0,y:0},
-  placedItems:[], // {type, x, y, angle}
-  selectedTool:null,
-  ghostAngle:0,
-  planTimer:0,
-  runTimer:0,
-  saved:0,
-  toolbox:{}, // remaining counts
-  progress:JSON.parse(localStorage.getItem('belkin_progress')||'{}'),
-  touchId:null,
-  dragItem:null,
-  dragOffX:0,dragOffY:0,
+  phase:'menu',lvl:0,saved:0,
+  placedItems:[],selectedTool:null,ghostAngle:0,
+  planTimer:0,runTimer:0,
+  toolbox:{},
+  progress:JSON.parse(localStorage.getItem('belkin_v2')||'{}'),
 };
-
-function saveProgress(){localStorage.setItem('belkin_progress',JSON.stringify(G.progress))}
+function saveProg(){localStorage.setItem('belkin_v2',JSON.stringify(G.progress))}
 
 /* ══════ INIT LEVEL ══════ */
 function initLevel(n){
   G.lvl=n;G.phase='plan';G.saved=0;
   world.bodies=[];world.squirrels=[];world.particles=[];world.tick=0;
   G.placedItems=[];G.selectedTool=null;G.ghostAngle=0;
-  G.dragItem=null;
-
   let L=LEVELS[n];
   G.planTimer=L.planTime;G.runTimer=0;
-  G.toolbox={};
-  for(let k in L.toolbox)G.toolbox[k]=L.toolbox[k];
+  G.toolbox={};for(let k in L.toolbox)G.toolbox[k]=L.toolbox[k];
 
-  // create static platforms
   L.platforms.forEach(p=>{
-    world.bodies.push(new Body(p.x+p.w/2, p.y+p.h/2, p.w, p.h, {static:true, color:'#5a7a3a', label:'platform'}));
+    world.bodies.push(new Body(p.x+p.w/2,p.y+p.h/2,p.w,p.h,{isStatic:true,color:'#5a7a3a',label:'platform'}));
   });
+  // floor & walls
+  world.bodies.push(new Body(400,405,900,30,{isStatic:true,color:'#3a2a1a',label:'floor'}));
+  world.bodies.push(new Body(-15,200,30,500,{isStatic:true,color:'#3a2a1a',label:'wall'}));
+  world.bodies.push(new Body(815,200,30,500,{isStatic:true,color:'#3a2a1a',label:'wall'}));
 
-  // walls & floor
-  world.bodies.push(new Body(400,410,900,40,{static:true,color:'#3a2a1a',label:'floor'}));
-  world.bodies.push(new Body(-15,200,30,500,{static:true,color:'#3a2a1a',label:'wall'}));
-  world.bodies.push(new Body(815,200,30,500,{static:true,color:'#3a2a1a',label:'wall'}));
-
-  showHUD(true);buildToolbar();updateHUD();
-  hideAllScreens();
-  showTut('Расставь предметы, потом нажми ▶ ПУСК');
+  hideAllScreens();showHUD(true);buildToolbar();updateHUD();
+  showTut('Выбери предмет снизу, тапни на карту — разместить.\nТапни на предмет на карте — убрать.\n↺ ↻ — повернуть доску. Затем ▶ ПУСК!');
 }
 
-/* ══════ START RUN ══════ */
 function startRun(){
   G.phase='run';G.selectedTool=null;
   let L=LEVELS[G.lvl];
-
-  // create placed items as physics bodies
   G.placedItems.forEach(item=>{
     let def=ITEMS[item.type];
-    let opts={static:true, color:def.color, label:'placed_'+item.type, angle:item.angle};
+    let opts={isStatic:true,color:def.color,label:'placed_'+item.type,angle:item.angle};
     if(def.bouncy)opts.isBouncy=true;
-    if(def.isBalloon){opts.static=false;opts.color='#ff6b6b';opts.label='balloon'}
-    let b=new Body(item.x,item.y,def.w,def.h,opts);
-    world.bodies.push(b);
+    if(def.isBalloon){opts.isStatic=false;opts.label='balloon'}
+    world.bodies.push(new Body(item.x,item.y,def.w,def.h,opts));
   });
-
-  // spawn squirrels
   for(let i=0;i<L.squirrels;i++){
-    world.squirrels.push(new Squirrel(L.spawn.x, L.spawn.y, i*25));
+    world.squirrels.push(new Squirrel(L.spawn.x,L.spawn.y,i*22));
   }
-
   buildToolbar();hideTut();
 }
 
 /* ══════ SQUIRREL AI ══════ */
-function updateSquirrelAI(sq){
+function updateSq(sq){
   if(!sq.alive||sq.saved||!sq.active)return;
-  let L=LEVELS[G.lvl];
-  let gx=L.goal.x, gy=L.goal.y;
-
-  // gravity
+  let L=LEVELS[G.lvl],gx=L.goal.x,gy=L.goal.y;
   sq.vy+=GRAV;
-
-  // direction toward goal
-  let dx=gx-sq.x;
-  sq.facingR=dx>0;
-  let dir=dx>0?1:-1;
-
-  // walking
-  if(sq.onGround){
-    sq.vx=dir*sq.walkSpeed;
-  }
-
-  // stuck detection
+  let dx=gx-sq.x,dir=dx>0?1:-1;
+  sq.facingR=dir>0;
+  if(sq.onGround)sq.vx=dir*sq.walkSpeed;
   sq.aiTimer++;
-  if(sq.aiTimer%30===0){
-    if(Math.abs(sq.x-sq.lastX)<2&&sq.onGround){
+  if(sq.aiTimer%25===0){
+    if(Math.abs(sq.x-sq.lastX)<1.5&&sq.onGround){
       sq.stuckTimer++;
       if(sq.stuckTimer>2&&sq.jumpCool<=0){
-        sq.vy=-7-Math.random()*2;
-        sq.vx=dir*(2+Math.random()*2);
-        sq.onGround=false;
-        sq.jumpCool=40;
-        sq.stuckTimer=0;
+        sq.vy=-7.5-Math.random()*2;sq.vx=dir*(2.5+Math.random()*2);
+        sq.onGround=false;sq.jumpCool=35;sq.stuckTimer=0;
       }
-    }else{
-      sq.stuckTimer=0;
-    }
+    }else sq.stuckTimer=0;
     sq.lastX=sq.x;
   }
-
   if(sq.jumpCool>0)sq.jumpCool--;
+  sq.x+=sq.vx;sq.y+=sq.vy;sq.vx*=0.98;
+  sq.tailP+=0.15;sq.blinkT--;if(sq.blinkT<=0)sq.blinkT=120+Math.random()*120|0;
 
-  // move
-  sq.x+=sq.vx;
-  sq.y+=sq.vy;
-  sq.vx*=0.98;
-  sq.tailP+=0.15;
-  sq.blinkT--;
-  if(sq.blinkT<=0)sq.blinkT=120+Math.random()*120|0;
-
-  // collision with bodies
+  // collide with bodies
   sq.onGround=false;
   for(let b of world.bodies){
     if(b.removed)continue;
     let bb=b.getAABB();
-    // simple circle-vs-AABB
     let cx=Math.max(bb.minX,Math.min(sq.x,bb.maxX));
     let cy=Math.max(bb.minY,Math.min(sq.y,bb.maxY));
-    let ddx=sq.x-cx, ddy=sq.y-cy;
+    let ddx=sq.x-cx,ddy=sq.y-cy;
     let dist=Math.sqrt(ddx*ddx+ddy*ddy);
     if(dist<sq.r){
-      let overlap=sq.r-dist;
-      let nx=dist>0?ddx/dist:0, ny=dist>0?ddy/dist:-1;
-      sq.x+=nx*overlap;
-      sq.y+=ny*overlap;
-
-      // check if landing on top
+      let ov=sq.r-dist;
+      let nx=dist>0?ddx/dist:0,ny=dist>0?ddy/dist:-1;
+      sq.x+=nx*ov;sq.y+=ny*ov;
       if(ny<-0.5){
-        sq.onGround=true;
-        sq.vy=0;
-        if(b.isBouncy){
-          sq.vy=-10-Math.random()*2;
-          sq.onGround=false;
-          addParticle(sq.x,sq.y+sq.r,'#4dabf7',5);
-        }
+        sq.onGround=true;sq.vy=0;
+        if(b.isBouncy){sq.vy=-10.5-Math.random()*2;sq.onGround=false;addPart(sq.x,sq.y+sq.r,'#4dabf7',5)}
       }else{
-        // side or bottom
         let dot=sq.vx*nx+sq.vy*ny;
-        sq.vx-=dot*nx*0.5;
-        sq.vy-=dot*ny*0.5;
+        sq.vx-=dot*nx*0.5;sq.vy-=dot*ny*0.5;
       }
     }
   }
-
   // hazards
-  let L2=LEVELS[G.lvl];
-  if(L2.hazards)L2.hazards.forEach(hz=>{
-    if(sq.x+sq.r>hz.x&&sq.x-sq.r<hz.x+hz.w&&sq.y+sq.r>hz.y&&sq.y-sq.r<hz.y+hz.h){
-      killSquirrel(sq);
-    }
+  if(L.hazards)L.hazards.forEach(hz=>{
+    if(sq.x+sq.r>hz.x&&sq.x-sq.r<hz.x+hz.w&&sq.y+sq.r>hz.y&&sq.y-sq.r<hz.y+hz.h)killSq(sq);
   });
-
-  // goal check
-  if(Math.abs(sq.x-gx)<25&&Math.abs(sq.y-gy)<30){
-    sq.saved=true;G.saved++;
-    addParticle(sq.x,sq.y,'#ffd43b',15,5);
-    updateHUD();
+  // goal
+  if(Math.abs(sq.x-gx)<28&&Math.abs(sq.y-gy)<35){
+    sq.saved=true;G.saved++;addPart(sq.x,sq.y,'#ffd43b',15,5);updateHUD();
   }
-
-  // fell off map
-  if(sq.y>420||sq.x<-20||sq.x>820)killSquirrel(sq);
+  if(sq.y>420||sq.x<-30||sq.x>830)killSq(sq);
 }
 
-function killSquirrel(sq){
-  if(!sq.alive)return;
-  sq.alive=false;
-  addParticle(sq.x,sq.y,'#ff6b6b',12,4);
-  addParticle(sq.x,sq.y,sq.color,8,3);
-  updateHUD();
+function killSq(sq){
+  if(!sq.alive)return;sq.alive=false;sq.deadTimer=60;
+  addPart(sq.x,sq.y,'#ff6b6b',12,4);addPart(sq.x,sq.y,sq.color,8,3);updateHUD();
 }
 
 /* ══════ PHYSICS STEP ══════ */
-function physicsStep(){
+function physStep(){
   world.tick++;
-  // update dynamic bodies
   for(let b of world.bodies){
-    if(b.static||b.removed)continue;
-    if(b.isBalloon){b.vy-=0.15}// floats up
-    else b.vy+=GRAV;
-    b.x+=b.vx;b.y+=b.vy;
-    b.angle+=b.angVel;
-    b.vx*=DRAG;b.vy*=DRAG;b.angVel*=ANG_DRAG;
-    // bounds
+    if(b.isStatic||b.removed)continue;
+    if(b.isBalloon)b.vy-=0.15; else b.vy+=GRAV;
+    b.x+=b.vx;b.y+=b.vy;b.angle+=b.angVel;
+    b.vx*=DRAG;b.vy*=DRAG;b.angVel*=0.98;
     if(b.y>400){b.y=400;b.vy*=-0.3}
     if(b.x<0){b.x=0;b.vx*=-0.3}
     if(b.x>800){b.x=800;b.vx*=-0.3}
     if(b.isBalloon&&b.y<-50)b.removed=true;
   }
-  // body-body collisions (static vs dynamic and dynamic vs dynamic)
   for(let i=0;i<world.bodies.length;i++){
     for(let j=i+1;j<world.bodies.length;j++){
       let a=world.bodies[i],b=world.bodies[j];
-      if(a.removed||b.removed)continue;
-      if(a.static&&b.static)continue;
+      if(a.removed||b.removed||a.isStatic&&b.isStatic)continue;
       if(!aabbOverlap(a,b))continue;
-      let info=satTest(a,b);
-      if(info)resolveCollision(a,b,info);
+      let info=satTest(a,b);if(info)resolveCollision(a,b,info);
     }
   }
-  // squirrels
   world.squirrels.forEach(sq=>{
     if(sq.delay>0){sq.delay--;return}
     if(!sq.active)sq.active=true;
-    updateSquirrelAI(sq);
+    updateSq(sq);
   });
-  // check end
+  // end check
   let alive=world.squirrels.filter(s=>s.alive&&!s.saved);
   let pending=world.squirrels.filter(s=>s.delay>0);
   if(G.phase==='run'&&alive.length===0&&pending.length===0){
     let L=LEVELS[G.lvl];
-    setTimeout(()=>{
-      if(G.phase!=='run')return;
-      if(G.saved>=L.need)winLevel();else loseLevel();
-    },500);
+    setTimeout(()=>{if(G.phase!=='run')return;G.saved>=L.need?winLevel():loseLevel()},500);
   }
 }
 
 /* ══════ RENDERING ══════ */
-const BG_COLORS={
-  forest:['#0f2a14','#1a4a28','#2a6a3a'],
-  factory:['#16162a','#24243a','#34344a'],
-  circus:['#2a0a3a','#441a5a','#5a2a7a'],
-  kitchen:['#2a1a08','#4a3a18','#6a5a28'],
+const BG_C={
+  forest:['#0f2a14','#1a4a28','#2a6a3a'],factory:['#16162a','#24243a','#34344a'],
+  circus:['#2a0a3a','#441a5a','#5a2a7a'],kitchen:['#2a1a08','#4a3a18','#6a5a28'],
   space:['#08081a','#0a0a2a','#140a3a']
 };
 let bgStars=[];for(let i=0;i<60;i++)bgStars.push({x:Math.random()*800,y:Math.random()*400,r:.5+Math.random()*1.2,bl:Math.random()*200|0});
 
+function scl(){return W/800}
+
 function drawBg(){
-  let theme=BG_COLORS[LEVELS[G.lvl]?.bg||'forest'];
-  let grd=X.createLinearGradient(0,0,0,H);
-  grd.addColorStop(0,theme[0]);grd.addColorStop(.5,theme[1]);grd.addColorStop(1,theme[2]);
-  X.fillStyle=grd;X.fillRect(0,0,W,H);
-  bgStars.forEach(s=>{
-    s.bl--;if(s.bl<=0)s.bl=80+Math.random()*160|0;
-    let a=s.bl<8?.3:.5+Math.random()*.4;
-    X.beginPath();X.arc(s.x*W/800,s.y*H/400,s.r,0,6.28);
+  let th=BG_C[LEVELS[G.lvl]?.bg||'forest'];
+  let g=X.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,th[0]);g.addColorStop(.5,th[1]);g.addColorStop(1,th[2]);
+  X.fillStyle=g;X.fillRect(0,0,W,H);
+  bgStars.forEach(st=>{
+    st.bl--;if(st.bl<=0)st.bl=80+Math.random()*160|0;
+    let a=st.bl<8?.3:.5+Math.random()*.4;
+    X.beginPath();X.arc(st.x*scl(),st.y*H/400,st.r,0,6.28);
     X.fillStyle=`rgba(255,255,255,${a})`;X.fill();
   });
 }
 
-function worldToScreen(wx,wy){return{x:wx*W/800,y:wy*H/400}}
-function screenToWorld(sx,sy){return{x:sx*800/W,y:sy*400/H}}
-
 function drawBody(b){
   if(b.removed)return;
-  let s=W/800; // scale factor
-  X.save();
-  X.translate(b.x*s, b.y*s);
-  X.rotate(b.angle);
-  let hw=b.w/2*s, hh=b.h/2*s;
-
-  // shadow
-  X.fillStyle='rgba(0,0,0,.18)';
-  X.fillRect(-hw+2,- hh+2,b.w*s,b.h*s);
-
+  let s=scl();
+  X.save();X.translate(b.x*s,b.y*(H/400));X.rotate(b.angle);
+  let hw=b.w/2*s,hh=b.h/2*(H/400);
   if(b.label==='platform'){
     let g=X.createLinearGradient(0,-hh,0,hh);
     g.addColorStop(0,'#6a9a4a');g.addColorStop(1,'#4a7a2a');
-    X.fillStyle=g;
-    X.fillRect(-hw,-hh,b.w*s,b.h*s);
-    // grass
+    X.fillStyle=g;X.fillRect(-hw,-hh,hw*2,hh*2);
     X.fillStyle='#7ab84a';
     for(let i=-hw;i<hw;i+=4*s)X.fillRect(i,-hh-1.5*s,2.5*s,3*s);
   }else if(b.label==='floor'){
     let g=X.createLinearGradient(0,-hh,0,hh);
     g.addColorStop(0,'#5a4a2a');g.addColorStop(1,'#3a2a1a');
-    X.fillStyle=g;X.fillRect(-hw,-hh,b.w*s,b.h*s);
+    X.fillStyle=g;X.fillRect(-hw,-hh,hw*2,hh*2);
   }else if(b.label==='wall'){
-    X.fillStyle='rgba(60,40,20,.5)';X.fillRect(-hw,-hh,b.w*s,b.h*s);
-  }else if(b.label.startsWith('placed_plank')){
+    X.fillStyle='rgba(60,40,20,.4)';X.fillRect(-hw,-hh,hw*2,hh*2);
+  }else if(b.label.includes('plank')){
     let g=X.createLinearGradient(0,-hh,0,hh);
     g.addColorStop(0,'#d4a04a');g.addColorStop(1,'#a07030');
-    X.fillStyle=g;X.fillRect(-hw,-hh,b.w*s,b.h*s);
-    X.strokeStyle='rgba(0,0,0,.2)';X.lineWidth=1;X.strokeRect(-hw,-hh,b.w*s,b.h*s);
-    // wood lines
-    X.strokeStyle='rgba(0,0,0,.08)';
+    X.fillStyle=g;X.fillRect(-hw,-hh,hw*2,hh*2);
+    X.strokeStyle='rgba(0,0,0,.15)';X.lineWidth=1;
     for(let i=-hw+6*s;i<hw;i+=8*s){X.beginPath();X.moveTo(i,-hh);X.lineTo(i,hh);X.stroke()}
-  }else if(b.label.startsWith('placed_box')){
+  }else if(b.label.includes('box')){
     let g=X.createLinearGradient(-hw,-hh,hw,hh);
     g.addColorStop(0,'#c49a62');g.addColorStop(1,'#8a6a3a');
-    X.fillStyle=g;X.fillRect(-hw,-hh,b.w*s,b.h*s);
-    X.strokeStyle='rgba(0,0,0,.25)';X.lineWidth=1.5;X.strokeRect(-hw,-hh,b.w*s,b.h*s);
-    X.beginPath();X.moveTo(-hw,-hh);X.lineTo(hw,hh);X.strokeStyle='rgba(0,0,0,.08)';X.stroke();
-    X.beginPath();X.moveTo(hw,-hh);X.lineTo(-hw,hh);X.stroke();
-  }else if(b.label.startsWith('placed_trampoline')){
-    X.fillStyle='#2a7abf';X.fillRect(-hw,-hh,b.w*s,b.h*s);
-    X.fillStyle='#4dabf7';X.fillRect(-hw,-hh,b.w*s,hh);
-    // spring marks
-    X.strokeStyle='#fff';X.lineWidth=1.5;
-    for(let i=-hw+5*s;i<hw;i+=7*s){X.beginPath();X.moveTo(i,-hh);X.lineTo(i+2*s,hh);X.stroke()}
+    X.fillStyle=g;X.fillRect(-hw,-hh,hw*2,hh*2);
+    X.strokeStyle='rgba(0,0,0,.2)';X.lineWidth=1.5;X.strokeRect(-hw,-hh,hw*2,hh*2);
+  }else if(b.label.includes('trampoline')){
+    X.fillStyle='#2a7abf';X.fillRect(-hw,-hh,hw*2,hh*2);
+    X.fillStyle='#4dabf7';X.fillRect(-hw,-hh,hw*2,hh);
+    X.strokeStyle='#fff';X.lineWidth=1;
+    for(let i=-hw+5*s;i<hw;i+=6*s){X.beginPath();X.moveTo(i,-hh);X.lineTo(i+2*s,hh);X.stroke()}
   }else if(b.label==='balloon'){
-    X.beginPath();X.arc(0,0,b.w/2*s,0,6.28);
-    let g=X.createRadialGradient(-2*s,-2*s,1,0,0,b.w/2*s);
+    let r=b.w/2*s;
+    X.beginPath();X.arc(0,0,r,0,6.28);
+    let g=X.createRadialGradient(-2*s,-2*s,1,0,0,r);
     g.addColorStop(0,'#ff8a8a');g.addColorStop(1,'#cc3333');
     X.fillStyle=g;X.fill();
-    X.strokeStyle='rgba(0,0,0,.2)';X.lineWidth=1;X.stroke();
-    // string
-    X.beginPath();X.moveTo(0,b.h/2*s);X.lineTo(0,b.h/2*s+12*s);
-    X.strokeStyle='#aaa';X.lineWidth=1;X.stroke();
+    X.beginPath();X.moveTo(0,r);X.lineTo(0,r+10*s);X.strokeStyle='#aaa';X.lineWidth=1;X.stroke();
   }else{
-    X.fillStyle=b.color;X.fillRect(-hw,-hh,b.w*s,b.h*s);
+    X.fillStyle=b.color;X.fillRect(-hw,-hh,hw*2,hh*2);
   }
   X.restore();
 }
 
 function drawHazard(hz){
-  let s=W/800;
-  let x=hz.x*s,y=hz.y*s,w=hz.w*s,h=hz.h*s;
+  let s=scl(),sy=H/400;
+  let x=hz.x*s,y=hz.y*sy,w=hz.w*s,h=hz.h*sy;
   if(hz.type==='spike'){
-    X.fillStyle='#888';
-    let step=6*s;
-    for(let i=x;i<x+w;i+=step){
-      X.beginPath();X.moveTo(i,y+h);X.lineTo(i+step/2,y);X.lineTo(i+step,y+h);X.fill();
-    }
-    X.fillStyle='rgba(200,0,0,.15)';X.fillRect(x,y,w,h);
+    X.fillStyle='#888';let step=6*s;
+    for(let i=x;i<x+w;i+=step){X.beginPath();X.moveTo(i,y+h);X.lineTo(i+step/2,y);X.lineTo(i+step,y+h);X.fill()}
   }else if(hz.type==='water'){
-    X.fillStyle='rgba(30,100,200,.4)';
     let g=X.createLinearGradient(x,y,x,y+h);
     g.addColorStop(0,'rgba(50,140,240,.3)');g.addColorStop(1,'rgba(20,60,140,.6)');
     X.fillStyle=g;X.fillRect(x,y,w,h);
-    // waves
-    X.strokeStyle='rgba(100,180,255,.4)';X.lineWidth=1.5;
-    X.beginPath();
-    for(let i=x;i<x+w;i+=8*s){
-      X.lineTo(i,y+Math.sin(world.tick*0.06+i*0.05)*3*s);
-    }
+    X.strokeStyle='rgba(100,180,255,.4)';X.lineWidth=1.5;X.beginPath();
+    for(let i=x;i<x+w;i+=8*s)X.lineTo(i,y+Math.sin(world.tick*.06+i*.05)*3*s);
     X.stroke();
   }
 }
 
 function drawGoal(){
   let L=LEVELS[G.lvl];if(!L)return;
-  let s=W/800;
-  let gx=L.goal.x*s, gy=L.goal.y*s;
-  // acorn / nut
-  let bob=Math.sin(world.tick*0.05)*3*s;
+  let s=scl(),sy=H/400;
+  let gx=L.goal.x*s,gy=L.goal.y*sy;
+  let bob=Math.sin(world.tick*.05)*3*s;
   X.save();X.translate(gx,gy+bob);
-  // glow
-  X.beginPath();X.arc(0,-10*s,18*s,0,6.28);
-  let gl=X.createRadialGradient(0,-10*s,2,0,-10*s,18*s);
+  X.beginPath();X.arc(0,-8*s,16*s,0,6.28);
+  let gl=X.createRadialGradient(0,-8*s,2,0,-8*s,16*s);
   gl.addColorStop(0,'rgba(255,212,59,.3)');gl.addColorStop(1,'rgba(255,212,59,0)');
   X.fillStyle=gl;X.fill();
-  // nut body
-  X.beginPath();X.arc(0,-6*s,10*s,0,6.28);
-  let ng=X.createRadialGradient(-2*s,-8*s,2,0,-6*s,10*s);
+  X.beginPath();X.arc(0,-5*s,9*s,0,6.28);
+  let ng=X.createRadialGradient(-2*s,-7*s,2,0,-5*s,9*s);
   ng.addColorStop(0,'#ffd43b');ng.addColorStop(1,'#b8860b');
   X.fillStyle=ng;X.fill();
-  // cap
-  X.beginPath();X.ellipse(0,-14*s,8*s,4*s,0,0,Math.PI,true);
+  X.beginPath();X.ellipse(0,-12*s,7*s,3.5*s,0,0,Math.PI,true);
   X.fillStyle='#8B6914';X.fill();
-  X.fillRect(-1*s,-18*s,2*s,4*s);
+  X.fillRect(-1*s,-16*s,2*s,4*s);
   X.restore();
 }
 
 function drawSquirrel(sq){
-  if(sq.saved||(!sq.alive&&sq.blinkT<-30))return;
-  let s=W/800;
-  let sx=sq.x*s, sy=sq.y*s, r=sq.r*s;
+  if(sq.saved)return;
+  let s=scl(),sy=H/400;
+  let sx2=sq.x*s,sy2=sq.y*sy,r=sq.r*s;
   if(!sq.alive){
-    // fade out particles
-    sq.blinkT--;
-    X.globalAlpha=Math.max(0,(30+sq.blinkT)/30);
-    X.beginPath();X.arc(sx,sy,r*0.5,0,6.28);X.fillStyle='#888';X.fill();
+    sq.deadTimer--;if(sq.deadTimer<=0)return;
+    X.globalAlpha=sq.deadTimer/60;
+    X.beginPath();X.arc(sx2,sy2,r*.4,0,6.28);X.fillStyle='#888';X.fill();
     X.globalAlpha=1;return;
   }
   if(!sq.active){
-    // waiting — small bouncing dot
-    let by=Math.sin(world.tick*0.1+sq.walkSpeed*10)*2*s;
-    X.beginPath();X.arc(sx,sy+by,r*0.6,0,6.28);X.fillStyle=sq.color;X.globalAlpha=.5;X.fill();X.globalAlpha=1;
-    return;
+    let by=Math.sin(world.tick*.1+sq.walkSpeed*10)*2*s;
+    X.beginPath();X.arc(sx2,sy2+by,r*.5,0,6.28);X.fillStyle=sq.color;X.globalAlpha=.4;X.fill();X.globalAlpha=1;return;
   }
-  X.save();X.translate(sx,sy);
-  let f=sq.facingR?1:-1;
-  X.scale(f,1);
-
+  X.save();X.translate(sx2,sy2);
+  let f=sq.facingR?1:-1;X.scale(f,1);
   // shadow
-  X.beginPath();X.ellipse(0,r+1.5*s,r*.8,2.5*s,0,0,6.28);X.fillStyle='rgba(0,0,0,.15)';X.fill();
-
+  X.beginPath();X.ellipse(0,r+1*s,r*.7,2*s,0,0,6.28);X.fillStyle='rgba(0,0,0,.12)';X.fill();
   // tail
   let tw=Math.sin(sq.tailP)*4*s;
   X.beginPath();X.moveTo(-2*s,-r+2*s);
-  X.quadraticCurveTo(-r*1.2-tw*1.5,-r*1.6, -r*.6,-r*1.8);
-  X.quadraticCurveTo(-r*0.8+tw,-r*1.1, 0,-r+3*s);
-  X.fillStyle=shadeCol(sq.color,-15);X.fill();
-
+  X.quadraticCurveTo(-r*1.2-tw*1.5,-r*1.6,-r*.6,-r*1.8);
+  X.quadraticCurveTo(-r*.8+tw,-r*1.1,0,-r+3*s);
+  X.fillStyle=shC(sq.color,-15);X.fill();
   // body
   X.beginPath();X.arc(0,0,r,0,6.28);
   let bg=X.createRadialGradient(-2*s,-2*s,1,0,0,r);
-  bg.addColorStop(0,shadeCol(sq.color,25));bg.addColorStop(1,sq.color);
+  bg.addColorStop(0,shC(sq.color,25));bg.addColorStop(1,sq.color);
   X.fillStyle=bg;X.fill();
-
   // belly
-  X.beginPath();X.ellipse(0,2*s,r*.55,r*.5,0,0,6.28);
-  X.fillStyle=shadeCol(sq.color,45);X.fill();
-
+  X.beginPath();X.ellipse(0,2*s,r*.5,r*.45,0,0,6.28);X.fillStyle=shC(sq.color,45);X.fill();
   // ears
   [[-5*s,-r+1*s],[5*s,-r+1*s]].forEach(([ex,ey])=>{
-    X.beginPath();X.ellipse(ex,ey-3*s,2
+    X.beginPath();X.ellipse(ex,ey-3*s,2.2*s,4*s,ex<0?-.3:.3,0,6.28);X.fillStyle=sq.color;X.fill();
+    X.beginPath();X.ellipse(ex,ey-3*s,1*s,2.2*s,ex<0?-.3:.3,0,6.28);X.fillStyle='#fca';X.fill();
+  });
+  // eyes
+  let blink=sq.blinkT<5;
+  [[-3.5*s,-2*s],[3.5*s,-2*s]].forEach(([ex,ey])=>{
+    X.beginPath();X.ellipse(ex,ey,2.2*s,blink?1:3.2*s,0,0,6.28);X.fillStyle='#fff';X.fill();
+    if(!blink){X.beginPath();X.arc(ex+.7*s,ey,1.1*s,0,6.28);X.fillStyle='#222';X.fill();
+      X.beginPath();X.arc(ex+1*s,ey-.7*s,.4*s,0,6.28);X.fillStyle='#fff';X.fill()}
+  });
+  X.beginPath();X.arc(0,.7*s,1.1*s,0,6.28);X.fillStyle='#d44';X.fill();
+  X.globalAlpha=.2;
+  X.beginPath();X.arc(-4.5*s,1.5*s,2.2*s,0,6.28);X.fillStyle='#faa';X.fill();
+  X.beginPath();X.arc(4.5*s,1.5*s,2.2*s,0,6.28);X.fill();
+  X.globalAlpha=1;
+  if(sq.onGround){
+    let fw=Math.sin(world.tick*.18)*1.5*s;
+    X.fillStyle=shC(sq.color,-25);
+    X.beginPath();X.ellipse(-3*s+fw,r,2.2*s,1.3*s,0,0,6.28);X.fill();
+    X.beginPath();X.ellipse(3*s-fw,r,2.2*s,1.3*s,0,0,6.28);X.fill();
+  }
+  X.restore();
+}
+
+function drawPlacedGhosts(){
+  let s=scl(),sy=H/400;
+  G.placedItems.forEach(item=>{
+    let def=ITEMS[item.type];
+    X.save();X.translate(item.x*s,item.y*sy);X.rotate(item.angle);
+    let hw=def.w/2*s,hh=def.h/2*sy;
+    X.globalAlpha=.65;X.fillStyle=def.color;
+    if(item.type==='balloon'){X.beginPath();X.arc(0,0,hw,0,6.28);X.fill()}
+    else X.fillRect(-hw,-hh,hw*2,hh*2);
+    X.globalAlpha=.8;X.fillStyle='#fff';X.font=`bold ${11*s}px sans-serif`;X.textAlign='center';X.textBaseline='middle';
+    X.fillText('✕',0,0);
+    X.globalAlpha=1;X.restore();
+  });
+}
+
+function drawGhostPrev(mx,my){
+  if(!G.selectedTool||G.phase!=='plan')return;
+  let def=ITEMS[G.selectedTool];if(!def)return;
+  let s=scl(),sy=H/400;
+  X.save();X.translate(mx,my);X.rotate(G.ghostAngle);
+  let hw=def.w/2*s,hh=def.h/2*sy;
+  X.globalAlpha=.35;X.fillStyle=def.color;
+  if(G.selectedTool==='balloon'){X.beginPath();X.arc(0,0,hw,0,6.28);X.fill()}
+  else X.fillRect(-hw,-hh,hw*2,hh*2);
+  X.globalAlpha=1;X.restore();
+}
+
+function drawParticles(){
+  let s=scl(),sy=H/400;
+  world.particles=world.particles.filter(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.life--;
+    if(p.life<=0)return false;
+    X.beginPath();X.arc(p.x*s,p.y*sy,p.r*s*(p.life/p.maxLife),0,6.28);
+    X.fillStyle=p.color;X.globalAlpha=p.life/p.maxLife;X.fill();X.globalAlpha=1;
+    return true;
+  });
+}
+
+function shC(c,a){
+  if(c.startsWith('hsl')||!c.startsWith('#'))return c;
+  let n=parseInt(c.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  return`rgb(${Math.max(0,Math.min(255,r+a))},${Math.max(0,Math.min(255,g+a))},${Math.max(0,Math.min(255,b+a))})`;
+}
+
+/* ══════ PLACEMENT ══════ */
+function screenToWorld(sx,sy){return{x:sx/scl(),y:sy/(H/400)}}
+
+function placeItem(wx,wy){
+  if(!G.selectedTool||G.phase!=='plan')return;
+  if((G.toolbox[G.selectedTool]||0)<=0)return;
+  if(wx<10||wx>790||wy<10||wy>380)return;
+  G.placedItems.push({type:G.selectedTool,x:wx,y:wy,angle:G.ghostAngle});
+  G.toolbox[G.selectedTool]--;
+  if(G.toolbox[G.selectedTool]<=0)G.selectedTool=null;
+  buildToolbar();
+}
+
+function removeItem(idx){
+  if(G.phase!=='plan')return;
+  let it=G.placedItems[idx];
+  G.toolbox[it.type]=(G.toolbox[it.type]||0)+1;
+  G.placedItems.splice(idx,1);buildToolbar();
+}
+
+function findPlacedAt(wx,wy){
+  for(let i=G.placedItems.length-1;i>=0;i--){
+    let it=G.placedItems[i],def=ITEMS[it.type];
+    let dx=wx-it.x,dy=wy-it.y;
+    let c=Math.cos(-it.angle),sn=Math.sin(-it.angle);
+    let lx=dx*c-dy*sn,ly=dx*sn+dy*c;
+    if(Math.abs(lx)<def.w/2+6&&Math.abs(ly)<def.h/2+6)return i;
+  }
+  return-1;
+}
+
+/* ══════ INPUT ══════ */
+let mouseX=W/2,mouseY=H/2;
+
+C.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  let r=C.getBoundingClientRect();
+  let sx=e.clientX-r.left,sy=e.clientY-r.top;
+  mouseX=sx;mouseY=sy;
+  if(G.phase==='plan'){
+    let wp=screenToWorld(sx,sy);
+    let idx=findPlacedAt(wp.x,wp.y);
+    if(idx>=0){removeItem(idx);return}
+    if(G.selectedTool)placeItem(wp.x,wp.y);
+  }
+});
+C.addEventListener('pointermove',e=>{
+  let r=C.getBoundingClientRect();mouseX=e.clientX-r.left;mouseY=e.clientY-r.top;
+});
+document.addEventListener('keydown',e=>{
+  if(e.code==='KeyQ')G.ghostAngle-=Math.PI/12;
+  if(e.code==='KeyE')G.ghostAngle+=Math.PI/12;
+});
+function rotGhost(dir){G.ghostAngle+=dir*Math.PI/8}
+
+/* ══════ UI ══════ */
+function showHUD(v){document.getElementById('hud').style.display=v?'block':'none'}
+function showToolbar(v){document.getElementById('toolbar').style.display=v?'block':'none'}
+function hideAllScreens(){['scr-menu','scr-levels','scr-win','scr-lose'].forEach(id=>document.getElementById(id).style.display='none')}
+function showTut(t){let e=document.getElementById('tut');e.textContent=t;e.style.display='block'}
+function hideTut(){document.getElementById('tut').style.display='none'}
+
+function updateHUD(){
+  let L=LEVELS[G.lvl];if(!L)return;
+  let alive=world.squirrels.filter(s=>s.alive&&!s.saved).length;
+  document.getElementById('h-alive').textContent=alive;
+  document.getElementById('h-lvl').textContent=G.lvl+1;
+  document.getElementById('h-saved').textContent=G.saved;
+  document.getElementById('h-need').textContent=L.need;
+  document.getElementById('h-time').textContent=Math.ceil(G.phase==='plan'?G.planTimer:0);
+  document.getElementById('timer-fill').style.width=((G.phase==='plan'?G.planTimer/L.planTime:0)*100)+'%';
+}
+
+function mk(tag,cls){let el=document.createElement(tag);el.className=cls;return el}
+
+function buildToolbar(){
+  let row=document.getElementById('tool-row');row.innerHTML='';
+  if(G.phase==='plan'){
+    let rl=mk('button','tool-btn');rl.innerHTML='<span class="tico">↺</span>';rl.onclick=()=>rotGhost(-1);row.appendChild(rl);
+    for(let k in G.toolbox){
+      let def=ITEMS[k];if(!def)continue;let cnt=G.toolbox[k];
+      let btn=mk('button','tool-btn'+(G.selectedTool===k?' active':''));
+      btn.innerHTML=`<span class="tico">${def.icon}</span><span class="tcnt">${def.name} ×${cnt}</span>`;
+      let key=k;btn.onclick=()=>{G.selectedTool=G.selectedTool===key?null:key;G.ghostAngle=0;buildToolbar()};
+      if(cnt<=0){btn.style.opacity='.3';btn.style.pointerEvents='none'}
+      row.appendChild(btn);
+    }
+    let rr=mk('button','tool-btn');rr.innerHTML='<span class="tico">↻</span>';rr.onclick=()=>rotGhost(1);row.appendChild(rr);
+    let go=mk('button','tool-btn');go.id='go-btn';go.innerHTML='<span class="tico">▶</span>ПУСК';
+    go.onclick=()=>startRun();row.appendChild(go);
+  }else if(G.phase==='run'){
+    let info=mk('div','');info.style.cssText='color:rgba(255,255,255,.5);font-size:13px;padding:14px;font-weight:600';
+    info.textContent='🐿️ Белки бегут к ореху...';row.appendChild(info);
+  }
+  showToolbar(true);
+}
+
+function showMenu(){
+  G.phase='menu';hideAllScreens();showHUD(false);showToolbar(false);hideTut();
+  document.getElementById('scr-menu').style.display='flex';
+}
+function showLevels(){
+  G.phase='menu';hideAllScreens();showHUD(false);showToolbar(false);hideTut();
+  if(G.progress[0]===undefined)G.progress[0]=0;
+  let grid=document.getElementById('lvl-grid');grid.innerHTML='';
+  for(let i=0;i<LEVELS.length;i++){
+    let unlocked=G.progress[i]!==undefined;let stars=G.progress[i]||0;
+    let btn=mk('button','lvl-btn'+(unlocked?'':' locked'));
+    btn.innerHTML=`${i+1}<div class="ms">${LEVELS[i].name}</div><div class="ms">${unlocked&&stars?'⭐'.repeat(stars):''}</div>`;
+    if(unlocked){let n=i;btn.onclick=()=>initLevel(n)}
+    grid.appendChild(btn);
+  }
+  document.getElementById('scr-levels').style.display='flex';
+}
+
+function winLevel(){
+  G.phase='win';let L=LEVELS[G.lvl];
+  let ratio=G.saved/L.squirrels;
+  let stars=ratio>=.85?3:ratio>=.55?2:1;
+  let prev=G.progress[G.lvl]||0;if(stars>prev)G.progress[G.lvl]=stars;
+  if(G.progress[G.lvl+1]===undefined&&G.lvl+1<LEVELS.length)G.progress[G.lvl+1]=0;
+  saveProg();
+  document.getElementById('w-stars').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
+  document.getElementById('w-stat').textContent=`Спасено: ${G.saved}/${L.squirrels}`;
+  hideAllScreens();showToolbar(false);document.getElementById('scr-win').style.display='flex';
+}
+function loseLevel(){
+  G.phase='lose';let L=LEVELS[G.lvl];
+  document.getElementById('l-sub').textContent=`Спасено ${G.saved} из ${L.need} нужных. Попробуй по-другому!`;
+  hideAllScreens();showToolbar(false);document.getElementById('scr-lose').style.display='flex';
+}
+function nextLvl(){if(G.lvl+1<LEVELS.length)initLevel(G.lvl+1);else showLevels()}
+function restartLvl(){initLevel(G.lvl)}
+
+/* ══════ BUTTON BINDINGS ══════ */
+document.getElementById('btn-play').addEventListener('click',showLevels);
+document.getElementById('btn-back-menu').addEventListener('click',showMenu);
+document.getElementById('btn-next').addEventListener('click',nextLvl);
+document.getElementById('btn-win-lvls').addEventListener('click',showLevels);
+document.getElementById('btn-retry').addEventListener('click',restartLvl);
+document.getElementById('btn-lose-lvls').addEventListener('click',showLevels);
+
+/* ══════ MAIN LOOP ══════ */
+let lastT=0;
+function loop(ts){
+  let dt=Math.min(ts-lastT,50);lastT=ts;
+  X.clearRect(0,0,W,H);
+
+  if(G.phase==='plan'||G.phase==='run'){
+    drawBg();
+    let L=LEVELS[G.lvl];
+    if(L.hazards)L.hazards.forEach(drawHazard);
+    world.bodies.forEach(drawBody);
+    if(G.phase==='plan')drawPlacedGhosts();
+    drawGoal();
+    world.squirrels.forEach(drawSquirrel);
+    drawParticles();
+    if(G.phase==='plan')drawGhostPrev(mouseX,mouseY);
+    if(G.phase==='run'){physStep();physStep();G.runTimer+=dt/1000}
+    if(G.phase==='plan'){G.planTimer-=dt/1000;if(G.planTimer<=0){G.planTimer=0;startRun()}}
+    world.tick++;updateHUD();
+  }else{
+    let g=X.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#0e2a0e');g.addColorStop(1,'#1a4a2a');
+    X.fillStyle=g;X.fillRect(0,0,W,H);
+    bgStars.forEach(st=>{
+      let sx2=(st.x+(world.tick||0)*.08)%800*W/800;
+      X.beginPath();X.arc(sx2,st.y*H/400,st.r,0,6.28);
+      X.fillStyle=`rgba(255,255,255,${.3+Math.random()*.3})`;X.fill();
+    });
+    world.tick=(world.tick||0)+1;
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
