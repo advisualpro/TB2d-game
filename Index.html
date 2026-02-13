@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Белкин Лес</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
+body{background:#0a1628}
+canvas{display:block;width:100%;height:100%}
+
+/* ── UI LAYER ── */
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10;display:flex;flex-direction:column}
+
+/* Top bar */
+.topbar{display:flex;justify-content:space-between;padding:12px 16px;pointer-events:none}
+.res{background:rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:20px;padding:7px 16px;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.08)}
+.res-ico{font-size:16px}
+
+/* Bottom shop */
+.shop{margin-top:auto;padding:10px 12px 24px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;pointer-events:auto;scrollbar-width:none}
+.shop::-webkit-scrollbar{display:none}
+.card{flex:0 0 auto;width:130px;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:18px;padding:12px;color:#fff;border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:transform .15s,border-color .15s;position:relative}
+.card:active{transform:scale(.96)}
+.card.affordable{border-color:rgba(255,180,0,.35)}
+.card-name{font-size:12px;font-weight:700;margin-bottom:4px;line-height:1.2}
+.card-desc{font-size:10px;opacity:.55;margin-bottom:8px;line-height:1.3}
+.card-cost{font-size:12px;font-weight:700;color:#ffd700;display:flex;align-items:center;gap:4px}
+.card-lvl{position:absolute;top:8px;right:10px;font-size:10px;opacity:.4;font-weight:700}
+.card-ico{font-size:22px;margin-bottom:6px}
+
+/* Center tap area */
+.tap-zone{position:fixed;top:30%;left:50%;transform:translateX(-50%);width:200px;height:260px;pointer-events:auto;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+/* Float text */
+.float-text{position:fixed;pointer-events:none;z-index:20;color:#ffd700;font-weight:800;font-size:18px;text-shadow:0 2px 8px rgba(0,0,0,.5);animation:floatUp .9s ease-out forwards}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(.7)}}
+
+/* Notification */
+.notif{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border-radius:14px;padding:8px 20px;color:#fff;font-size:13px;font-weight:600;z-index:30;pointer-events:none;animation:notifAnim 2s ease-out forwards;border:1px solid rgba(255,180,0,.2)}
+@keyframes notifAnim{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}75%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-5px)}}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div id="ui">
+  <div class="topbar">
+    <div class="res"><span class="res-ico">🌰</span><span id="r-nuts">0</span></div>
+    <div class="res"><span class="res-ico">🐿️</span><span id="r-sq">0</span>/с</div>
+  </div>
+  <div class="shop" id="shop"></div>
+</div>
+
+<div class="tap-zone" id="tap-zone"></div>
+
+<script>
+// ══════════════════════════════
+//  БЕЛКИН ЛЕС — idle clicker
+// ══════════════════════════════
+
+// ── CANVAS ──
+const C = document.getElementById('c');
+const X = C.getContext('2d');
+let W, H, DPR;
+
+function resize() {
+  W = innerWidth; H = innerHeight;
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  C.width = W * DPR; C.height = H * DPR;
+}
+addEventListener('resize', resize);
+resize();
+
+// ── UTILS ──
+const rand = (a, b) => a + Math.random() * (b - a);
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtNum = n => {
+  if (n >= 1e12) return (n/1e12).toFixed(1)+'T';
+  if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return Math.floor(n).toString();
+};
+
+// ── GAME STATE ──
+let nuts = 0;
+let nutsPerClick = 1;
+let nutsPerSec = 0;
+let treeLevel = 1;
+let treeBranches = 3;
+let treeHeight = 0.4; // 0..1 of screen
+let leafCount = 12;
+let squirrelSlots = [];
+let bgParticles = []; // fireflies
+let fallingLeaves = [];
+let clickParticles = [];
+let frame = 0;
+
+// ── UPGRADES ──
+const upgrades = [
+  { id:'click', name:'Сильный тап', desc:'Орехов за клик +1', ico:'👆', baseCost:10, costMul:1.8, level:0, effect(){ nutsPerClick = 1 + this.level; }},
+  { id:'branch', name:'Новая ветка', desc:'Больше веток = больше белок', ico:'🌿', baseCost:25, costMul:2.2, level:0, effect(){ treeBranches = 3 + this.level * 2; leafCount = 12 + this.level * 5; rebuildTree(); }},
+  { id:'squirrel', name:'Белка-сборщик', desc:'+1 🐿️ орех/сек', ico:'🐿️', baseCost:50, costMul:2.0, level:0, effect(){ addSquirrel(); recalcPS(); }},
+  { id:'golden', name:'Золотой орех', desc:'Орехов/сек ×1.5', ico:'✨', baseCost:300, costMul:3.0, level:0, effect(){ recalcPS(); }},
+  { id:'tree', name:'Рост дерева', desc:'Дерево выше и красивее', ico:'🌳', baseCost:150, costMul:2.5, level:0, effect(){ treeLevel = 1 + this.level; treeHeight = Math.min(0.75, 0.4 + this.level * 0.06); rebuildTree(); }},
+  { id:'duplo', name:'Уютное дупло', desc:'+3 🐿️ орех/сек', ico:'🏠', baseCost:500, costMul:2.8, level:0, effect(){ recalcPS(); }},
+];
+
+function getCost(u) { return Math.floor(u.baseCost * Math.pow(u.costMul, u.level)); }
+
+function recalcPS() {
+  const sqLvl = upgrades.find(u=>u.id==='squirrel').level;
+  const goldLvl = upgrades.find(u=>u.id==='golden').level;
+  const duploLvl = upgrades.find(u=>u.id==='duplo').level;
+  nutsPerSec = (sqLvl * 1 + duploLvl * 3) * Math.pow(1.5, goldLvl);
+}
+
+// ── SQUIRREL SPRITES (world coords) ──
+function addSquirrel() {
+  // Place on a random branch position
+  const slot = {
+    x: rand(W * 0.25, W * 0.75),
+    baseY: rand(H * 0.25, H * 0.65),
+    phase: rand(0, Math.PI * 2),
+    speed: rand(0.3, 0.8),
+    dir: Math.random() > 0.5 ? 1 : -1,
+    size: rand(0.8, 1.1),
+    bobPhase: rand(0, 10),
+  };
+  squirrelSlots.push(slot);
+}
+
+// ── TREE DATA ──
+let branches = [];
+function rebuildTree() {
+  branches = [];
+  const cx = 0.5; // center x ratio
+  const baseY = 0.88; // trunk base ratio
+  const topY = baseY - treeHeight;
+  for (let i = 0; i < treeBranches; i++) {
+    const t = (i + 0.5) / treeBranches;
+    const y = lerp(baseY - 0.05, topY + 0.05, t);
+    const side = (i % 2 === 0) ? -1 : 1;
+    const len = rand(0.08, 0.18) * (1 - t * 0.3);
+    branches.push({ y, side, len, sway: rand(0, Math.PI * 2) });
+  }
+}
+rebuildTree();
+
+// ── FIREFLIES ──
+for (let i = 0; i < 15; i++) {
+  bgParticles.push({
+    x: rand(0, 1), y: rand(0, 1),
+    vx: rand(-0.0003, 0.0003), vy: rand(-0.0005, 0.0001),
+    r: rand(1.5, 3), phase: rand(0, Math.PI * 2), speed: rand(0.02, 0.05),
+    color: Math.random() > 0.5 ? '180,255,100' : '255,220,80'
+  });
+}
+
+// ── RENDER ──
+function render() {
+  X.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  // ── SKY ──
+  const sky = X.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#0a1628');
+  sky.addColorStop(0.35, '#162a50');
+  sky.addColorStop(0.65, '#1a3a5c');
+  sky.addColorStop(1, '#0d2818');
+  X.fillStyle = sky;
+  X.fillRect(0, 0, W, H);
+
+  // ── STARS ──
+  for (let i = 0; i < 40; i++) {
+    // Deterministic pseudo-random from index
+    const px = ((i * 7919 + 1) % 997) / 997;
+    const py = ((i * 6271 + 3) % 991) / 991 * 0.4;
+    const br = 0.3 + Math.sin(frame * 0.02 + i * 2.1) * 0.25;
+    X.fillStyle = `rgba(255,255,240,${clamp(br, 0.1, 0.8)})`;
+    X.beginPath();
+    X.arc(px * W, py * H, 1 + (i % 3) * 0.4, 0, Math.PI * 2);
+    X.fill();
+  }
+
+  // ── MOON ──
+  const mx = W * 0.82, my = H * 0.08;
+  const mg = X.createRadialGradient(mx, my, 0, mx, my, 40);
+  mg.addColorStop(0, 'rgba(255,250,220,.85)');
+  mg.addColorStop(0.4, 'rgba(255,240,200,.2)');
+  mg.addColorStop(1, 'rgba(255,240,200,0)');
+  X.fillStyle = mg;
+  X.beginPath(); X.arc(mx, my, 40, 0, Math.PI * 2); X.fill();
+  X.fillStyle = '#fdfbe8';
+  X.beginPath(); X.arc(mx, my, 14, 0, Math.PI * 2); X.fill();
+
+  // ── DISTANT HILLS ──
+  X.fillStyle = '#0d2a14';
+  X.beginPath();
+  X.moveTo(0, H * 0.75);
+  for (let i = 0; i <= W; i += 20) {
+    X.lineTo(i, H * 0.72 + Math.sin(i * 0.008 + 1) * 18 + Math.sin(i * 0.02) * 6);
+  }
+  X.lineTo(W, H); X.lineTo(0, H);
+  X.fill();
+
+  // ── GROUND ──
+  const gg = X.createLinearGradient(0, H * 0.85, 0, H);
+  gg.addColorStop(0, '#1a4d28');
+  gg.addColorStop(0.5, '#153d20');
+  gg.addColorStop(1, '#0d2818');
+  X.fillStyle = gg;
+  X.beginPath();
+  X.moveTo(0, H * 0.87);
+  for (let i = 0; i <= W; i += 15) {
+    X.lineTo(i, H * 0.87 + Math.sin(i * 0.015 + 0.5) * 4);
+  }
+  X.lineTo(W, H); X.lineTo(0, H); X.fill();
+
+  // Ground grass line
+  X.strokeStyle = '#2a7a3a';
+  X.lineWidth = 2;
+  X.beginPath();
+  for (let i = 0; i <= W; i += 3) {
+    const gy = H * 0.87 + Math.sin(i * 0.015 + 0.5) * 4;
+    if (i === 0) X.moveTo(i, gy); else X.lineTo(i, gy);
+  }
+  X.stroke();
+
+  // ── TREE ──
+  drawTree();
+
+  // ── SQUIRRELS ──
+  for (const sq of squirrelSlots) {
+    drawSquirrel(sq);
+  }
+
+  // ── FIREFLIES ──
+  for (const p of bgParticles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0 || p.x > 1) p.vx *= -1;
+    if (p.y < 0 || p.y > 1) p.vy *= -1;
+    const b = 0.4 + Math.sin(frame * p.speed + p.phase) * 0.4;
+    const glow = X.createRadialGradient(p.x * W, p.y * H, 0, p.x * W, p.y * H, p.r * 6);
+    glow.addColorStop(0, `rgba(${p.color},${b})`);
+    glow.addColorStop(1, `rgba(${p.color},0)`);
+    X.fillStyle = glow;
+    X.beginPath(); X.arc(p.x * W, p.y * H, p.r * 6, 0, Math.PI * 2); X.fill();
+    X.fillStyle = `rgba(${p.color},${Math.min(1, b + 0.3)})`;
+    X.beginPath(); X.arc(p.x * W, p.y * H, p.r, 0, Math.PI * 2); X.fill();
+  }
+
+  // ── FALLING LEAVES ──
+  for (let i = fallingLeaves.length - 1; i >= 0; i--) {
+    const lf = fallingLeaves[i];
+    lf.x += lf.vx;
+    lf.y += lf.vy;
+    lf.rot += lf.vr;
+    lf.life -= 0.012;
+    if (lf.life <= 0) { fallingLeaves.splice(i, 1); continue; }
+    lf.vx += Math.sin(frame * 0.03 + lf.phase) * 0.02;
+    X.save();
+    X.translate(lf.x, lf.y);
+    X.rotate(lf.rot);
+    X.globalAlpha = clamp(lf.life, 0, 1);
+    X.fillStyle = lf.color;
+    X.beginPath();
+    X.ellipse(0, 0, 4, 2.5, 0, 0, Math.PI * 2);
+    X.fill();
+    X.globalAlpha = 1;
+    X.restore();
+  }
+
+  // ── CLICK PARTICLES ──
+  for (let i = clickParticles.length - 1; i >= 0; i--) {
+    const cp = clickParticles[i];
+    cp.x += cp.vx;
+    cp.y += cp.vy;
+    cp.vy += 0.08;
+    cp.life -= 0.025;
+    if (cp.life <= 0) { clickParticles.splice(i, 1); continue; }
+    X.globalAlpha = clamp(cp.life, 0, 1);
+    X.fillStyle = cp.color;
+    X.beginPath(); X.arc(cp.x, cp.y, cp.r * cp.life, 0, Math.PI * 2); X.fill();
+    X.globalAlpha = 1;
+  }
+}
+
+function drawTree() {
+  const cx = W * 0.5;
+  const baseY = H * 0.88;
+  const topY = baseY - treeHeight * H;
+  const trunkW = 12 + treeLevel * 3;
+
+  // ── TRUNK ──
+  const tg = X.createLinearGradient(cx - trunkW, baseY, cx + trunkW, topY);
+  tg.addColorStop(0, '#3d2510');
+  tg.addColorStop(0.5, '#5a3a1a');
+  tg.addColorStop(1, '#4a2e14');
+  X.fillStyle = tg;
+
+  X.beginPath();
+  X.moveTo(cx - trunkW, baseY);
+  X.quadraticCurveTo(cx - trunkW - 2, lerp(baseY, topY, 0.5), cx - trunkW * 0.4, topY + 20);
+  X.lineTo(cx + trunkW * 0.4, topY + 20);
+  X.quadraticCurveTo(cx + trunkW + 2, lerp(baseY, topY, 0.5), cx + trunkW, baseY);
+  X.closePath();
+  X.fill();
+
+  // Bark texture
+  X.strokeStyle = 'rgba(30,15,5,.3)';
+  X.lineWidth = 1;
+  for (let i = 0; i < 6 + treeLevel * 2; i++) {
+    const t = rand(0.05, 0.9);
+    const by = lerp(baseY, topY + 25, t);
+    const bw = trunkW * lerp(1, 0.4, t);
+    X.beginPath();
+    X.moveTo(cx - bw * rand(0.2, 0.8), by);
+    X.quadraticCurveTo(cx, by + rand(-5, 5), cx + bw * rand(0.2, 0.8), by + rand(-3, 3));
+    X.stroke();
+  }
+
+  // ── ДУПЛО ──
+  const duploY = lerp(baseY, topY, 0.3);
+  const duploR = 8 + treeLevel;
+  const dg = X.createRadialGradient(cx, duploY, 0, cx, duploY, duploR);
+  dg.addColorStop(0, '#0a0500');
+  dg.addColorStop(0.7, '#1a0e05');
+  dg.addColorStop(1, '#3d2510');
+  X.fillStyle = dg;
+  X.beginPath(); X.ellipse(cx, duploY, duploR, duploR * 1.2, 0, 0, Math.PI * 2); X.fill();
+  X.strokeStyle = '#6B4226';
+  X.lineWidth = 1.5;
+  X.beginPath(); X.ellipse(cx, duploY, duploR, duploR * 1.2, 0, 0, Math.PI * 2); X.stroke();
+
+  // ── BRANCHES ──
+  for (const br of branches) {
+    const by = br.y * H;
+    const sway = Math.sin(frame * 0.015 + br.sway) * 3;
+    const bx = cx + br.side * trunkW * lerp(1, 0.4, (br.y * H - topY) / (baseY - topY));
+    const endX = bx + br.side * br.len * W + sway;
+    const endY = by - rand(5, 15);
+
+    // Branch wood
+    X.strokeStyle = '#5a3a1a';
+    X.lineWidth = 3 + treeLevel * 0.5;
+    X.lineCap = 'round';
+    X.beginPath();
+    X.moveTo(bx, by);
+    X.quadraticCurveTo(bx + br.side * br.len * W * 0.5 + sway * 0.5, by - 10, endX, endY);
+    X.stroke();
+
+    // Leaf cluster at end of branch
+    drawLeafCluster(endX, endY, 16 + treeLevel * 3);
+  }
+
+  // ── CROWN (top) ──
+  drawLeafCluster(cx, topY + 15, 30 + treeLevel * 8);
+  drawLeafCluster(cx - 20, topY + 25, 20 + treeLevel * 4);
+  drawLeafCluster(cx + 20, topY + 25, 20 + treeLevel * 4);
+}
+
+function drawLeafCluster(x, y, r) {
+  // Multiple layered circles for organic look
+  const colors = ['#2d8a3e', '#38a84a', '#45c458', '#2e7d32'];
+  for (let i = 0; i < 4; i++) {
+    const ox = Math.sin(i * 1.8 + frame * 0.008) * r * 0.2;
+    const oy = Math.cos(i * 2.3 + frame * 0.006) * r * 0.15;
+    const cr = r * rand(0.5, 0.8);
+    X.fillStyle = colors[i % colors.length];
+    X.globalAlpha = 0.7;
+    X.beginPath();
+    X.arc(x + ox, y + oy, cr, 0, Math.PI * 2);
+    X.fill();
+  }
+  X.globalAlpha = 1;
+
+  // Highlight
+  X.fillStyle = 'rgba(120,255,120,.08)';
+  X.beginPath(); X.arc(x, y - r * 0.3, r * 0.6, 0, Math.PI * 2); X.fill();
+}
+
+function drawSquirrel(sq) {
+  const bob = Math.sin(frame * 0.04 + sq.bobPhase) * 3;
+  const sx = sq.x + Math.sin(frame * 0.01 * sq.speed + sq.phase) * 15;
+  const sy = sq.baseY + bob;
+  const s = 8 * sq.size;
+  const d = sq.dir;
+
+  X.save();
+  X.translate(sx, sy);
+  X.scale(d, 1);
+
+  // Tail
+  const tailSway = Math.sin(frame * 0.04 + sq.phase) * 5;
+  X.strokeStyle = '#d4790a';
+  X.lineWidth = 3.5;
+  X.lineCap = 'round';
+  X.beginPath();
+  X.moveTo(-3, -1);
+  X.bezierCurveTo(-8, -5 + tailSway * 0.3, -12 + tailSway * 0.4, -14, -8 + tailSway * 0.2, -17);
+  X.stroke();
+  X.strokeStyle = '#f0a030';
+  X.lineWidth = 1.8;
+  X.beginPath();
+  X.moveTo(-3, -2);
+  X.bezierCurveTo(-7, -6 + tailSway * 0.3, -10 + tailSway * 0.4, -13, -7 + tailSway * 0.2, -15);
+  X.stroke();
+
+  // Body
+  const bg = X.createRadialGradient(0, 1, 0, 0, 0, s);
+  bg.addColorStop(0, '#e8940a');
+  bg.addColorStop(0.7, '#d4790a');
+  bg.addColorStop(1, '#b86208');
+  X.fillStyle = bg;
+  X.beginPath(); X.ellipse(0, 1, s * 0.7, s * 0.8, 0, 0, Math.PI * 2); X.fill();
+
+  // Belly
+  X.fillStyle = '#f5c76a';
+  X.beginPath(); X.ellipse(1, 3, s * 0.38, s * 0.45, 0, 0, Math.PI * 2); X.fill();
+
+  // Head
+  X.fillStyle = '#e8940a';
+  X.beginPath(); X.ellipse(2, -5, s * 0.6, s * 0.55, 0, 0, Math.PI * 2); X.fill();
+
+  // Ears
+  X.fillStyle = '#d4790a';
+  X.beginPath(); X.moveTo(-1, -9); X.lineTo(-3, -14); X.lineTo(1, -10); X.fill();
+  X.beginPath(); X.moveTo(4, -9); X.lineTo(5, -14); X.lineTo(7, -10); X.fill();
+  X.fillStyle = '#f5c76a';
+  X.beginPath(); X.moveTo(0, -9.5); X.lineTo(-2, -12.5); X.lineTo(1.5, -10); X.fill();
+
+  // Eyes
+  X.fillStyle = '#fff';
+  X.beginPath(); X.ellipse(4, -6, 2.2, 2.5, 0, 0, Math.PI * 2); X.fill();
+  X.beginPath(); X.ellipse(0, -6, 1.8, 2.2, 0, 0, Math.PI * 2); X.fill();
+  X.fillStyle = '#111';
+  X.beginPath(); X.arc(4.3, -5.7, 1.3, 0, Math.PI * 2); X.fill();
+  X.beginPath(); X.arc(0.3, -5.7, 1.1, 0, Math.PI * 2); X.fill();
+  X.fillStyle = '#fff';
+  X.beginPath(); X.arc(4.6, -6.3, 0.5, 0, Math.PI * 2); X.fill();
+
+  // Nose
+  X.fillStyle = '#7a3a10';
+  X.beginPath(); X.ellipse(6.5, -4.5, 1.2, 0.8, 0, 0, Math.PI * 2); X.fill();
+
+  // Legs
+  X.fillStyle = '#b86208';
+  const legOff = Math.sin(frame * 0.06 + sq.phase) * 1.5;
+  X.beginPath(); X.ellipse(-2, s * 0.7 + legOff, 3, 2, 0.2, 0, Math.PI * 2); X.fill();
+  X.beginPath(); X.ellipse(3, s * 0.7 - legOff, 3, 2, -0.2, 0, Math.PI * 2); X.fill();
+
+  X.restore();
+}
+
+// ── SHOP UI ──
+function buildShop() {
+  const shop = document.getElementById('shop');
+  shop.innerHTML = '';
+  for (const u of upgrades) {
+    const cost = getCost(u);
+    const card = document.createElement('div');
+    card.className = 'card' + (nuts >= cost ? ' affordable' : '');
+    card.innerHTML = `
+      <div class="card-lvl">Lv.${u.level}</div>
+      <div class="card-ico">${u.ico}</div>
+      <div class="card-name">${u.name}</div>
+      <div class="card-desc">${u.desc}</div>
+      <div class="card-cost">🌰 ${fmtNum(cost)}</div>
+    `;
+    card.addEventListener('click', () => buyUpgrade(u));
+    shop.appendChild(card);
+  }
+}
+
+function refreshShop() {
+  const cards = document.querySelectorAll('.card');
+  let i = 0;
+  for (const u of upgrades) {
+    if (cards[i]) {
+      const cost = getCost(u);
+      cards[i].className = 'card' + (nuts >= cost ? ' affordable' : '');
+      cards[i].querySelector('.card-lvl').textContent = 'Lv.' + u.level;
+      cards[i].querySelector('.card-cost').innerHTML = '🌰 ' + fmtNum(cost);
+    }
+    i++;
+  }
+}
+
+function buyUpgrade(u) {
+  const cost = getCost(u);
+  if (nuts < cost) return;
+  nuts -= cost;
+  u.level++;
+  u.effect();
+  refreshShop();
+  showNotif(`${u.ico} ${u.name} → Lv.${u.level}`);
+}
+
+// ── TAP HANDLING ──
+const tapZone = document.getElementById('tap-zone');
+
+function handleTap(ex, ey) {
+  const amount = nutsPerClick;
+  nuts += amount;
+
+  // Float text
+  const ft = document.createElement('div');
+  ft.className = 'float-text';
+  ft.textContent = '+' + fmtNum(amount);
+  ft.style.left = ex + rand(-20, 20) + 'px';
+  ft.style.top = ey - 20 + 'px';
+  document.body.appendChild(ft);
+  setTimeout(() => ft.remove(), 950);
+
+  // Click particles
+  for (let i = 0; i < 5; i++) {
+    clickParticles.push({
+      x: ex, y: ey,
+      vx: rand(-3, 3), vy: rand(-5, -1),
+      r: rand(2, 5),
+      color: ['#ffd700','#ffb300','#ff8f00','#fff8e1'][Math.floor(rand(0,4))],
+      life: 1
+    });
+  }
+
+  // Shake tree leaves
+  spawnFallingLeaves(2);
+
+  // Subtle tree shake via canvas — handled in render
+}
+
+tapZone.addEventListener('click', (e) => handleTap(e.clientX, e.clientY));
+tapZone.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  handleTap(t.clientX, t.clientY);
+}, {passive: false});
+
+function spawnFallingLeaves(n) {
+  const cx = W * 0.5;
+  const topY = H * (0.88 - treeHeight) + 20;
+  for (let i = 0; i < n; i++) {
+    fallingLeaves.push({
+      x: cx + rand(-40, 40),
+      y: topY + rand(-10, 30),
+      vx: rand(-0.8, 0.8),
+      vy: rand(0.5, 1.5),
+      vr: rand(-0.05, 0.05),
+      rot: rand(0, Math.PI * 2),
+      life: 1,
+      phase: rand(0, 10),
+      color: ['#2d8a3e','#45c458','#8BC34A','#66BB6A','#FDD835'][Math.floor(rand(0,5))]
+    });
+  }
+}
+
+// ── NOTIFICATION ──
+function showNotif(text) {
+  const el = document.createElement('div');
+  el.className = 'notif';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2100);
+}
+
+// ── HUD ──
+function updateHUD() {
+  document.getElementById('r-nuts').textContent = fmtNum(nuts);
+  document.getElementById('r-sq').textContent = fmtNum(nutsPerSec);
+}
+
+// ── SAVE / LOAD ──
+function saveGame() {
+  const data = {
+    nuts, nutsPerClick, treeLevel, treeHeight, treeBranches, leafCount,
+    levels: upgrades.map(u => u.level),
+    squirrelCount: squirrelSlots.length
+  };
+  try { localStorage.setItem('belkin_les', JSON.stringify(data)); } catch(e) {}
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem('belkin_les');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    nuts = data.nuts || 0;
+    for (let i = 0; i < upgrades.length; i++) {
+      upgrades[i].level = (data.levels && data.levels[i]) || 0;
+    }
+    // Replay effects
+    for (const u of upgrades) {
+      if (u.level > 0) {
+        // Re-apply effects without adding squirrels — rebuild manually
+        if (u.id === 'click') nutsPerClick = 1 + u.level;
+        if (u.id === 'branch') { treeBranches = 3 + u.level * 2; leafCount = 12 + u.level * 5; }
+        if (u.id === 'tree') { treeLevel = 1 + u.level; treeHeight = Math.min(0.75, 0.4 + u.level * 0.06); }
+      }
+    }
+    rebuildTree();
+    // Restore squirrels
+    const sqCount = data.squirrelCount || upgrades.find(u=>u.id==='squirrel').level;
+    squirrelSlots = [];
+    for (let i = 0; i < sqCount; i++) addSquirrel();
+    recalcPS();
+  } catch(e) {}
+}
+
+// ── MAIN LOOP ──
+let lastSave = 0;
+let lastIdle = 0;
+
+function loop(ts) {
+  frame++;
+
+  // Idle income (every ~100ms for smoothness)
+  if (ts - lastIdle > 100) {
+    const dt = (ts - lastIdle) / 1000;
+    nuts += nutsPerSec * dt;
+    lastIdle = ts;
+
+    // Occasional leaf drop
+    if (nutsPerSec > 0 && Math.random() < 0.05) {
+      spawnFallingLeaves(1);
+    }
+  }
+
+  // Cap particles to avoid lag
+  if (fallingLeaves.length > 30) fallingLeaves.splice(0, fallingLeaves.length - 30);
+  if (clickParticles.length > 25) clickParticles.splice(0, clickParticles.length - 25);
+
+  render();
+  updateHUD();
+  refreshShop();
+
+  // Auto-save every 5s
+  if (ts - lastSave > 5000) { saveGame(); lastSave = ts; }
+
+  requestAnimationFrame(loop);
+}
+
+// ── INIT ──
+loadGame();
+buildShop();
+requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>
