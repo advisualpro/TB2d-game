@@ -3,652 +3,757 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Белкин Лес</title>
+<title>ЭВОЛЮЦИЯ</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
-body{background:#0a1628}
-canvas{display:block;width:100%;height:100%}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:'Segoe UI',system-ui,sans-serif;touch-action:none}
+canvas{display:block;width:100%;height:100%;touch-action:none}
 
-/* ── UI LAYER ── */
-#ui{position:fixed;inset:0;pointer-events:none;z-index:10;display:flex;flex-direction:column}
+/* ── TOP HUD ── */
+#hud{position:fixed;top:0;left:0;right:0;z-index:20;padding:8px 10px 6px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.pill{background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:16px;padding:5px 12px;color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.06)}
+.pill .i{font-size:14px}
 
-/* Top bar */
-.topbar{display:flex;justify-content:space-between;padding:12px 16px;pointer-events:none}
-.res{background:rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:20px;padding:7px 16px;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.08)}
-.res-ico{font-size:16px}
+/* ── ERA BANNER ── */
+#era-banner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;pointer-events:none;opacity:0;transition:opacity .4s}
+#era-banner.show{opacity:1}
+#era-banner .inner{background:rgba(0,0,0,.75);backdrop-filter:blur(12px);border-radius:20px;padding:20px 36px;text-align:center;color:#fff;border:1px solid rgba(255,200,0,.2)}
+#era-banner h2{font-size:22px;margin-bottom:4px;background:linear-gradient(135deg,#ffd700,#ff8c00);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#era-banner p{font-size:13px;opacity:.65}
 
-/* Bottom shop */
-.shop{margin-top:auto;padding:10px 12px 24px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;pointer-events:auto;scrollbar-width:none}
-.shop::-webkit-scrollbar{display:none}
-.card{flex:0 0 auto;width:130px;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:18px;padding:12px;color:#fff;border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:transform .15s,border-color .15s;position:relative}
-.card:active{transform:scale(.96)}
-.card.affordable{border-color:rgba(255,180,0,.35)}
-.card-name{font-size:12px;font-weight:700;margin-bottom:4px;line-height:1.2}
-.card-desc{font-size:10px;opacity:.55;margin-bottom:8px;line-height:1.3}
-.card-cost{font-size:12px;font-weight:700;color:#ffd700;display:flex;align-items:center;gap:4px}
-.card-lvl{position:absolute;top:8px;right:10px;font-size:10px;opacity:.4;font-weight:700}
-.card-ico{font-size:22px;margin-bottom:6px}
+/* ── BOTTOM ACTIONS ── */
+#actions{position:fixed;bottom:0;left:0;right:0;z-index:20;padding:8px 10px 20px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#actions::-webkit-scrollbar{display:none}
+.act{flex:0 0 auto;min-width:90px;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;padding:10px 12px;color:#fff;text-align:center;cursor:pointer;border:1px solid rgba(255,255,255,.08);transition:transform .12s,border-color .15s;pointer-events:auto}
+.act:active{transform:scale(.94)}
+.act.ready{border-color:rgba(255,200,0,.4);box-shadow:0 0 12px rgba(255,200,0,.1)}
+.act.busy{opacity:.5;pointer-events:none}
+.act-ico{font-size:20px;margin-bottom:3px}
+.act-name{font-size:10px;font-weight:700;margin-bottom:2px}
+.act-info{font-size:9px;opacity:.5;line-height:1.2}
+.act-bar{width:100%;height:3px;border-radius:2px;background:rgba(255,255,255,.1);margin-top:5px;overflow:hidden}
+.act-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#ffd700,#ff8c00);width:0%;transition:width .1s linear}
 
-/* Center tap area */
-.tap-zone{position:fixed;top:30%;left:50%;transform:translateX(-50%);width:200px;height:260px;pointer-events:auto;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent}
+/* ── FLOAT TEXT ── */
+.ft{position:fixed;pointer-events:none;z-index:25;color:#ffd700;font-weight:800;font-size:16px;text-shadow:0 2px 8px rgba(0,0,0,.6);animation:fUp .8s ease-out forwards}
+@keyframes fUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-50px) scale(.6)}}
 
-/* Float text */
-.float-text{position:fixed;pointer-events:none;z-index:20;color:#ffd700;font-weight:800;font-size:18px;text-shadow:0 2px 8px rgba(0,0,0,.5);animation:floatUp .9s ease-out forwards}
-@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(.7)}}
+/* ── NOTIFICATION ── */
+.notif{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:25;background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border-radius:14px;padding:8px 20px;color:#fff;font-size:12px;font-weight:600;pointer-events:none;animation:nA 2.5s ease-out forwards;border:1px solid rgba(255,200,0,.15)}
+@keyframes nA{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
 
-/* Notification */
-.notif{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border-radius:14px;padding:8px 20px;color:#fff;font-size:13px;font-weight:600;z-index:30;pointer-events:none;animation:notifAnim 2s ease-out forwards;border:1px solid rgba(255,180,0,.2)}
-@keyframes notifAnim{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}75%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-5px)}}
+/* ── KNOWLEDGE PANEL ── */
+#know{position:fixed;top:50px;right:8px;z-index:15;pointer-events:none}
+.sym{display:inline-block;width:26px;height:26px;border-radius:8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);margin:2px;text-align:center;line-height:26px;font-size:14px;transition:border-color .3s,background .3s}
+.sym.learned{border-color:rgba(255,200,0,.4);background:rgba(255,200,0,.1)}
 </style>
 </head>
 <body>
 
 <canvas id="c"></canvas>
 
-<div id="ui">
-  <div class="topbar">
-    <div class="res"><span class="res-ico">🌰</span><span id="r-nuts">0</span></div>
-    <div class="res"><span class="res-ico">🐿️</span><span id="r-sq">0</span>/с</div>
-  </div>
-  <div class="shop" id="shop"></div>
+<div id="hud">
+  <div class="pill"><span class="i">🪵</span><span id="h-wood">0</span></div>
+  <div class="pill"><span class="i">🥩</span><span id="h-meat">0</span></div>
+  <div class="pill"><span class="i">🪨</span><span id="h-stone">0</span></div>
+  <div class="pill"><span class="i">🧠</span><span id="h-xp">0</span></div>
+  <div class="pill"><span class="i">⭐</span><span id="h-era">Каменный век</span></div>
 </div>
 
-<div class="tap-zone" id="tap-zone"></div>
+<div id="know"></div>
+
+<div id="era-banner"><div class="inner"><h2 id="eb-title"></h2><p id="eb-sub"></p></div></div>
+
+<div id="actions"></div>
 
 <script>
-// ══════════════════════════════
-//  БЕЛКИН ЛЕС — idle clicker
-// ══════════════════════════════
+// ══════════════════════════════════
+//  ЭВОЛЮЦИЯ — idle survival strategy
+// ══════════════════════════════════
 
-// ── CANVAS ──
-const C = document.getElementById('c');
-const X = C.getContext('2d');
-let W, H, DPR;
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W,H,DPR;
+function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);C.width=W*DPR;C.height=H*DPR}
+addEventListener('resize',resize);resize();
 
-function resize() {
-  W = innerWidth; H = innerHeight;
-  DPR = Math.min(devicePixelRatio || 1, 2);
-  C.width = W * DPR; C.height = H * DPR;
-}
-addEventListener('resize', resize);
-resize();
-
-// ── UTILS ──
-const rand = (a, b) => a + Math.random() * (b - a);
-const lerp = (a, b, t) => a + (b - a) * t;
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const fmtNum = n => {
-  if (n >= 1e12) return (n/1e12).toFixed(1)+'T';
-  if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
-  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
-  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
-  return Math.floor(n).toString();
-};
+const rand=(a,b)=>a+Math.random()*(b-a);
+const lerp=(a,b,t)=>a+(b-a)*t;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmt=n=>{if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return Math.floor(n)};
 
 // ── GAME STATE ──
-let nuts = 0;
-let nutsPerClick = 1;
-let nutsPerSec = 0;
-let treeLevel = 1;
-let treeBranches = 3;
-let treeHeight = 0.4; // 0..1 of screen
-let leafCount = 12;
-let squirrelSlots = [];
-let bgParticles = []; // fireflies
-let fallingLeaves = [];
-let clickParticles = [];
-let frame = 0;
+let wood=0, meat=0, stone=0, xp=0;
+let era=0; // 0=stone,1=bone,2=fire,3=tribe,4=wisdom
+let frame=0;
+let manX, manY, manTargetX, manTargetY, manDir=1, manState='idle', manAnimT=0;
+let actionTimer=0, actionDuration=0, currentAction=null;
+let worldObjects=[];
+let particles=[];
+let learnedSymbols=[];
+let dayTime=0; // 0..1 cycle
 
-// ── UPGRADES ──
-const upgrades = [
-  { id:'click', name:'Сильный тап', desc:'Орехов за клик +1', ico:'👆', baseCost:10, costMul:1.8, level:0, effect(){ nutsPerClick = 1 + this.level; }},
-  { id:'branch', name:'Новая ветка', desc:'Больше веток = больше белок', ico:'🌿', baseCost:25, costMul:2.2, level:0, effect(){ treeBranches = 3 + this.level * 2; leafCount = 12 + this.level * 5; rebuildTree(); }},
-  { id:'squirrel', name:'Белка-сборщик', desc:'+1 🐿️ орех/сек', ico:'🐿️', baseCost:50, costMul:2.0, level:0, effect(){ addSquirrel(); recalcPS(); }},
-  { id:'golden', name:'Золотой орех', desc:'Орехов/сек ×1.5', ico:'✨', baseCost:300, costMul:3.0, level:0, effect(){ recalcPS(); }},
-  { id:'tree', name:'Рост дерева', desc:'Дерево выше и красивее', ico:'🌳', baseCost:150, costMul:2.5, level:0, effect(){ treeLevel = 1 + this.level; treeHeight = Math.min(0.75, 0.4 + this.level * 0.06); rebuildTree(); }},
-  { id:'duplo', name:'Уютное дупло', desc:'+3 🐿️ орех/сек', ico:'🏠', baseCost:500, costMul:2.8, level:0, effect(){ recalcPS(); }},
+const ERAS=[
+  {name:'Каменный век',color:'#8B7355',need:0},
+  {name:'Век кости',color:'#c4a882',need:50},
+  {name:'Эпоха огня',color:'#e8650a',need:200},
+  {name:'Эра племени',color:'#4a9e4a',need:600},
+  {name:'Заря разума',color:'#6a8cff',need:1500},
+  {name:'HOMO SAPIENS',color:'#ffd700',need:3500},
 ];
 
-function getCost(u) { return Math.floor(u.baseCost * Math.pow(u.costMul, u.level)); }
+const SYMBOLS=['𓀀','𓁐','𓂀','𓃭','𓄿','𓅓','𓆈','𓇋','𓈖','𓉐','𓊝','𓋴'];
 
-function recalcPS() {
-  const sqLvl = upgrades.find(u=>u.id==='squirrel').level;
-  const goldLvl = upgrades.find(u=>u.id==='golden').level;
-  const duploLvl = upgrades.find(u=>u.id==='duplo').level;
-  nutsPerSec = (sqLvl * 1 + duploLvl * 3) * Math.pow(1.5, goldLvl);
-}
+const ACTIONS=[
+  {id:'chop',name:'Рубить',ico:'🪓',desc:'Добыть дерево',dur:2,need:{},give:{wood:3},xp:2,era:0},
+  {id:'gather',name:'Собирать',ico:'🪨',desc:'Собрать камни',dur:2.5,need:{},give:{stone:2},xp:1,era:0},
+  {id:'hunt',name:'Охота',ico:'🏹',desc:'Добыть мясо',dur:3.5,need:{wood:2},give:{meat:2},xp:4,era:0},
+  {id:'craft',name:'Орудие',ico:'⚒️',desc:'Каменный топор',dur:4,need:{stone:3,wood:2},give:{xp:15},xp:8,era:1},
+  {id:'fire',name:'Огонь',ico:'🔥',desc:'Развести костёр',dur:5,need:{wood:5},give:{xp:25,meat:3},xp:12,era:2},
+  {id:'study',name:'Изучать',ico:'🧠',desc:'Изучить символ',dur:6,need:{stone:2},give:{xp:40},xp:20,era:2},
+  {id:'build',name:'Строить',ico:'🏠',desc:'Построить хижину',dur:8,need:{wood:15,stone:10},give:{xp:80},xp:40,era:3},
+  {id:'teach',name:'Учить',ico:'📖',desc:'Передать знания',dur:7,need:{meat:5},give:{xp:120},xp:60,era:4},
+  {id:'think',name:'Мыслить',ico:'💡',desc:'Философия',dur:10,need:{meat:3,stone:3,wood:3},give:{xp:200},xp:100,era:4},
+];
 
-// ── SQUIRREL SPRITES (world coords) ──
-function addSquirrel() {
-  // Place on a random branch position
-  const slot = {
-    x: rand(W * 0.25, W * 0.75),
-    baseY: rand(H * 0.25, H * 0.65),
-    phase: rand(0, Math.PI * 2),
-    speed: rand(0.3, 0.8),
-    dir: Math.random() > 0.5 ? 1 : -1,
-    size: rand(0.8, 1.1),
-    bobPhase: rand(0, 10),
-  };
-  squirrelSlots.push(slot);
-}
-
-// ── TREE DATA ──
-let branches = [];
-function rebuildTree() {
-  branches = [];
-  const cx = 0.5; // center x ratio
-  const baseY = 0.88; // trunk base ratio
-  const topY = baseY - treeHeight;
-  for (let i = 0; i < treeBranches; i++) {
-    const t = (i + 0.5) / treeBranches;
-    const y = lerp(baseY - 0.05, topY + 0.05, t);
-    const side = (i % 2 === 0) ? -1 : 1;
-    const len = rand(0.08, 0.18) * (1 - t * 0.3);
-    branches.push({ y, side, len, sway: rand(0, Math.PI * 2) });
+// ── WORLD OBJECTS ──
+function generateWorld(){
+  worldObjects=[];
+  // Trees
+  for(let i=0;i<8+era*2;i++){
+    worldObjects.push({type:'tree',x:rand(30,W-30),baseY:rand(H*0.45,H*0.78),size:rand(0.7,1.2),sway:rand(0,10),alive:true});
+  }
+  // Rocks
+  for(let i=0;i<5+era;i++){
+    worldObjects.push({type:'rock',x:rand(20,W-20),baseY:rand(H*0.5,H*0.82),size:rand(0.6,1),alive:true});
+  }
+  // Animals (after era 0)
+  if(era>=0){
+    for(let i=0;i<2+era;i++){
+      worldObjects.push({type:'animal',x:rand(50,W-50),baseY:rand(H*0.5,H*0.75),size:rand(0.8,1.1),dir:Math.random()>.5?1:-1,phase:rand(0,10),alive:true});
+    }
+  }
+  // Fire pit (era>=2)
+  if(era>=2){
+    worldObjects.push({type:'firepit',x:W*0.5,baseY:H*0.72,size:1,alive:true});
+  }
+  // Hut (era>=3)
+  if(era>=3){
+    worldObjects.push({type:'hut',x:W*0.35,baseY:H*0.7,size:1,alive:true});
   }
 }
-rebuildTree();
 
-// ── FIREFLIES ──
-for (let i = 0; i < 15; i++) {
-  bgParticles.push({
-    x: rand(0, 1), y: rand(0, 1),
-    vx: rand(-0.0003, 0.0003), vy: rand(-0.0005, 0.0001),
-    r: rand(1.5, 3), phase: rand(0, Math.PI * 2), speed: rand(0.02, 0.05),
-    color: Math.random() > 0.5 ? '180,255,100' : '255,220,80'
-  });
+// ── INIT ──
+function init(){
+  manX=W*0.5;manY=H*0.7;
+  manTargetX=manX;manTargetY=manY;
+  generateWorld();
+  buildActions();
+  buildKnowledge();
+}
+
+// ── BUILD ACTIONS UI ──
+function buildActions(){
+  const el=document.getElementById('actions');
+  el.innerHTML='';
+  for(const a of ACTIONS){
+    if(a.era>era) continue;
+    const d=document.createElement('div');
+    d.className='act';
+    d.id='act-'+a.id;
+    d.innerHTML=`<div class="act-ico">${a.ico}</div><div class="act-name">${a.name}</div><div class="act-info">${a.desc}</div><div class="act-bar"><div class="act-bar-fill" id="bar-${a.id}"></div></div>`;
+    d.addEventListener('click',()=>startAction(a));
+    d.addEventListener('touchstart',(e)=>{e.preventDefault();startAction(a);},{passive:false});
+    el.appendChild(d);
+  }
+}
+
+function buildKnowledge(){
+  const el=document.getElementById('know');
+  el.innerHTML='';
+  for(let i=0;i<Math.min(SYMBOLS.length,3+era*2);i++){
+    const s=document.createElement('span');
+    s.className='sym'+(learnedSymbols.includes(i)?' learned':'');
+    s.textContent=learnedSymbols.includes(i)?SYMBOLS[i]:'?';
+    el.appendChild(s);
+  }
+}
+
+// ── ACTIONS LOGIC ──
+function canAfford(a){
+  if(!a.need)return true;
+  if(a.need.wood&&wood<a.need.wood)return false;
+  if(a.need.meat&&meat<a.need.meat)return false;
+  if(a.need.stone&&stone<a.need.stone)return false;
+  return true;
+}
+
+function startAction(a){
+  if(currentAction)return;
+  if(!canAfford(a))return;
+  // Pay cost
+  if(a.need.wood)wood-=a.need.wood;
+  if(a.need.meat)meat-=a.need.meat;
+  if(a.need.stone)stone-=a.need.stone;
+  currentAction=a;
+  actionTimer=0;
+  actionDuration=a.dur/(1+era*0.15);
+  manState=a.id;
+
+  // Walk to relevant object
+  let target=null;
+  if(a.id==='chop') target=worldObjects.find(o=>o.type==='tree'&&o.alive);
+  else if(a.id==='gather') target=worldObjects.find(o=>o.type==='rock'&&o.alive);
+  else if(a.id==='hunt') target=worldObjects.find(o=>o.type==='animal'&&o.alive);
+  else if(a.id==='fire') target=worldObjects.find(o=>o.type==='firepit');
+  else if(a.id==='build') target=worldObjects.find(o=>o.type==='hut')||{x:W*0.35,baseY:H*0.7};
+
+  if(target){
+    manTargetX=target.x+rand(-20,20);
+    manTargetY=target.baseY;
+  }
+}
+
+function finishAction(a){
+  // Give rewards
+  if(a.give.wood) wood+=a.give.wood*(1+era*0.3);
+  if(a.give.meat) meat+=a.give.meat*(1+era*0.3);
+  if(a.give.stone) stone+=a.give.stone*(1+era*0.3);
+  if(a.give.xp) xp+=a.give.xp;
+  xp+=a.xp;
+
+  // Float text
+  let txt=[];
+  if(a.give.wood) txt.push('+'+Math.floor(a.give.wood*(1+era*0.3))+'🪵');
+  if(a.give.meat) txt.push('+'+Math.floor(a.give.meat*(1+era*0.3))+'🥩');
+  if(a.give.stone) txt.push('+'+Math.floor(a.give.stone*(1+era*0.3))+'🪨');
+  txt.push('+'+a.xp+'🧠');
+  floatText(manX,manY-60,txt.join(' '));
+
+  // Particles
+  for(let i=0;i<8;i++){
+    particles.push({x:manX+rand(-15,15),y:manY-20+rand(-10,10),vx:rand(-2,2),vy:rand(-3,-0.5),life:1,color:a.id==='fire'?'#ff6600':a.id==='hunt'?'#ff4444':'#ffd700',r:rand(2,4)});
+  }
+
+  // Study → learn symbol
+  if(a.id==='study'){
+    const unlearned=[];
+    for(let i=0;i<Math.min(SYMBOLS.length,3+era*2);i++){
+      if(!learnedSymbols.includes(i))unlearned.push(i);
+    }
+    if(unlearned.length>0){
+      const idx=unlearned[Math.floor(Math.random()*unlearned.length)];
+      learnedSymbols.push(idx);
+      notify('Изучен символ: '+SYMBOLS[idx]);
+      buildKnowledge();
+    }
+  }
+
+  // Check era upgrade
+  checkEra();
+
+  currentAction=null;
+  manState='idle';
+}
+
+function checkEra(){
+  if(era<ERAS.length-1 && xp>=ERAS[era+1].need){
+    era++;
+    showEraBanner(ERAS[era].name, eraSubtitle(era));
+    generateWorld();
+    buildActions();
+    buildKnowledge();
+  }
+}
+
+function eraSubtitle(e){
+  return['Первые шаги','Кости как инструмент','Огонь меняет всё','Вместе мы сильнее','Знание — сила','Ты стал Человеком!'][e]||'';
+}
+
+// ── ERA BANNER ──
+function showEraBanner(title,sub){
+  const b=document.getElementById('era-banner');
+  document.getElementById('eb-title').textContent=title;
+  document.getElementById('eb-sub').textContent=sub;
+  b.classList.add('show');
+  setTimeout(()=>b.classList.remove('show'),3000);
+}
+
+// ── FLOAT TEXT ──
+function floatText(wx,wy,text){
+  // Convert world to screen (world IS screen in this game)
+  const el=document.createElement('div');
+  el.className='ft';
+  el.textContent=text;
+  el.style.left=(wx-40)+'px';
+  el.style.top=(wy)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),850);
+}
+
+function notify(text){
+  const el=document.createElement('div');
+  el.className='notif';
+  el.textContent=text;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2600);
+}
+
+// ── UPDATE ──
+function update(dt){
+  frame++;
+  dayTime=(dayTime+dt*0.008)%1;
+
+  // Man movement
+  const dx=manTargetX-manX, dy=manTargetY-manY;
+  const d=Math.sqrt(dx*dx+dy*dy);
+  if(d>3){
+    const speed=80+era*15;
+    manX+=dx/d*speed*dt;
+    manY+=dy/d*speed*dt;
+    manDir=dx>0?1:-1;
+    manAnimT+=dt*6;
+  }
+
+  // Action progress
+  if(currentAction){
+    actionTimer+=dt;
+    const bar=document.getElementById('bar-'+currentAction.id);
+    if(bar) bar.style.width=Math.min(100,(actionTimer/actionDuration)*100)+'%';
+    manAnimT+=dt*8;
+    if(actionTimer>=actionDuration){
+      if(bar) bar.style.width='0%';
+      finishAction(currentAction);
+    }
+  }
+
+  // Animate animals
+  for(const o of worldObjects){
+    if(o.type==='animal'&&o.alive){
+      o.x+=o.dir*15*dt;
+      if(o.x<30||o.x>W-30) o.dir*=-1;
+    }
+  }
+
+  // Idle auto-income (small, scales with era)
+  if(era>=1){
+    wood+=0.1*era*dt;
+    stone+=0.05*era*dt;
+  }
+  if(era>=3){
+    meat+=0.08*era*dt;
+    xp+=0.5*era*dt;
+  }
+
+  // Update action button states
+  for(const a of ACTIONS){
+    const el=document.getElementById('act-'+a.id);
+    if(!el)continue;
+    if(currentAction){
+      el.className='act'+(currentAction.id===a.id?'':' busy');
+    }else{
+      el.className='act'+(canAfford(a)?' ready':'');
+    }
+  }
+
+  // Particles
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx;p.y+=p.vy;p.vy+=0.1;p.life-=dt*1.5;
+    if(p.life<=0)particles.splice(i,1);
+  }
+  if(particles.length>40)particles.splice(0,particles.length-40);
+
+  // HUD
+  document.getElementById('h-wood').textContent=fmt(wood);
+  document.getElementById('h-meat').textContent=fmt(meat);
+  document.getElementById('h-stone').textContent=fmt(stone);
+  document.getElementById('h-xp').textContent=fmt(xp);
+  document.getElementById('h-era').textContent=ERAS[era].name;
 }
 
 // ── RENDER ──
-function render() {
-  X.setTransform(DPR, 0, 0, DPR, 0, 0);
+function render(){
+  X.setTransform(DPR,0,0,DPR,0,0);
 
   // ── SKY ──
-  const sky = X.createLinearGradient(0, 0, 0, H);
-  sky.addColorStop(0, '#0a1628');
-  sky.addColorStop(0.35, '#162a50');
-  sky.addColorStop(0.65, '#1a3a5c');
-  sky.addColorStop(1, '#0d2818');
-  X.fillStyle = sky;
-  X.fillRect(0, 0, W, H);
+  const nightT=Math.abs(Math.sin(dayTime*Math.PI*2));
+  const skyTop=lerpColor([10,15,45],[60,130,200],nightT);
+  const skyBot=lerpColor([15,25,30],[180,210,230],nightT);
+  const sky=X.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,`rgb(${skyTop})`);
+  sky.addColorStop(0.6,`rgb(${skyBot})`);
+  sky.addColorStop(1,'#1a3d20');
+  X.fillStyle=sky;
+  X.fillRect(0,0,W,H);
 
-  // ── STARS ──
-  for (let i = 0; i < 40; i++) {
-    // Deterministic pseudo-random from index
-    const px = ((i * 7919 + 1) % 997) / 997;
-    const py = ((i * 6271 + 3) % 991) / 991 * 0.4;
-    const br = 0.3 + Math.sin(frame * 0.02 + i * 2.1) * 0.25;
-    X.fillStyle = `rgba(255,255,240,${clamp(br, 0.1, 0.8)})`;
-    X.beginPath();
-    X.arc(px * W, py * H, 1 + (i % 3) * 0.4, 0, Math.PI * 2);
-    X.fill();
+  // ── SUN / MOON ──
+  const celestialAngle=dayTime*Math.PI*2-Math.PI/2;
+  const sunX=W*0.5+Math.cos(celestialAngle)*W*0.35;
+  const sunY=H*0.35+Math.sin(celestialAngle)*H*0.3;
+  if(nightT>0.3){
+    // Sun
+    const sg=X.createRadialGradient(sunX,sunY,0,sunX,sunY,30);
+    sg.addColorStop(0,'rgba(255,240,100,.9)');
+    sg.addColorStop(0.5,'rgba(255,200,50,.2)');
+    sg.addColorStop(1,'rgba(255,200,50,0)');
+    X.fillStyle=sg;X.beginPath();X.arc(sunX,sunY,30,0,Math.PI*2);X.fill();
+    X.fillStyle='#fff8c4';X.beginPath();X.arc(sunX,sunY,10,0,Math.PI*2);X.fill();
+  }else{
+    // Moon
+    const mg=X.createRadialGradient(sunX,sunY,0,sunX,sunY,25);
+    mg.addColorStop(0,'rgba(220,230,255,.8)');
+    mg.addColorStop(0.5,'rgba(200,210,255,.15)');
+    mg.addColorStop(1,'rgba(200,210,255,0)');
+    X.fillStyle=mg;X.beginPath();X.arc(sunX,sunY,25,0,Math.PI*2);X.fill();
+    X.fillStyle='#e8ecff';X.beginPath();X.arc(sunX,sunY,8,0,Math.PI*2);X.fill();
   }
 
-  // ── MOON ──
-  const mx = W * 0.82, my = H * 0.08;
-  const mg = X.createRadialGradient(mx, my, 0, mx, my, 40);
-  mg.addColorStop(0, 'rgba(255,250,220,.85)');
-  mg.addColorStop(0.4, 'rgba(255,240,200,.2)');
-  mg.addColorStop(1, 'rgba(255,240,200,0)');
-  X.fillStyle = mg;
-  X.beginPath(); X.arc(mx, my, 40, 0, Math.PI * 2); X.fill();
-  X.fillStyle = '#fdfbe8';
-  X.beginPath(); X.arc(mx, my, 14, 0, Math.PI * 2); X.fill();
-
-  // ── DISTANT HILLS ──
-  X.fillStyle = '#0d2a14';
-  X.beginPath();
-  X.moveTo(0, H * 0.75);
-  for (let i = 0; i <= W; i += 20) {
-    X.lineTo(i, H * 0.72 + Math.sin(i * 0.008 + 1) * 18 + Math.sin(i * 0.02) * 6);
+  // ── STARS (at night) ──
+  if(nightT<0.5){
+    const starAlpha=(0.5-nightT)*2;
+    for(let i=0;i<30;i++){
+      const px=((i*7919+1)%997)/997;
+      const py=((i*6271+3)%991)/991*0.45;
+      const br=starAlpha*(0.3+Math.sin(frame*0.02+i*2.1)*0.25);
+      X.fillStyle=`rgba(255,255,240,${clamp(br,0,1)})`;
+      X.beginPath();X.arc(px*W,py*H,1+(i%3)*.4,0,Math.PI*2);X.fill();
+    }
   }
-  X.lineTo(W, H); X.lineTo(0, H);
-  X.fill();
+
+  // ── MOUNTAINS ──
+  X.fillStyle=lerpRGB([15,40,25],[40,80,50],nightT);
+  X.beginPath();X.moveTo(0,H*0.5);
+  for(let i=0;i<=W;i+=8)X.lineTo(i,H*0.45+Math.sin(i*0.005)*30+Math.sin(i*0.013)*15);
+  X.lineTo(W,H);X.lineTo(0,H);X.fill();
 
   // ── GROUND ──
-  const gg = X.createLinearGradient(0, H * 0.85, 0, H);
-  gg.addColorStop(0, '#1a4d28');
-  gg.addColorStop(0.5, '#153d20');
-  gg.addColorStop(1, '#0d2818');
-  X.fillStyle = gg;
-  X.beginPath();
-  X.moveTo(0, H * 0.87);
-  for (let i = 0; i <= W; i += 15) {
-    X.lineTo(i, H * 0.87 + Math.sin(i * 0.015 + 0.5) * 4);
-  }
-  X.lineTo(W, H); X.lineTo(0, H); X.fill();
+  const gg=X.createLinearGradient(0,H*0.65,0,H);
+  gg.addColorStop(0,lerpRGB([30,80,35],[50,120,55],nightT));
+  gg.addColorStop(1,lerpRGB([20,50,25],[35,75,40],nightT));
+  X.fillStyle=gg;
+  X.beginPath();X.moveTo(0,H*0.68);
+  for(let i=0;i<=W;i+=10)X.lineTo(i,H*0.68+Math.sin(i*0.012+0.5)*5);
+  X.lineTo(W,H);X.lineTo(0,H);X.fill();
 
-  // Ground grass line
-  X.strokeStyle = '#2a7a3a';
-  X.lineWidth = 2;
+  // Grass edge
+  X.strokeStyle='rgba(100,180,80,.5)';X.lineWidth=1.5;
   X.beginPath();
-  for (let i = 0; i <= W; i += 3) {
-    const gy = H * 0.87 + Math.sin(i * 0.015 + 0.5) * 4;
-    if (i === 0) X.moveTo(i, gy); else X.lineTo(i, gy);
+  for(let i=0;i<=W;i+=4){
+    const gy=H*0.68+Math.sin(i*0.012+0.5)*5;
+    if(i===0)X.moveTo(i,gy);else X.lineTo(i,gy);
   }
   X.stroke();
 
-  // ── TREE ──
-  drawTree();
-
-  // ── SQUIRRELS ──
-  for (const sq of squirrelSlots) {
-    drawSquirrel(sq);
+  // Ground grass blades
+  X.strokeStyle='rgba(80,160,60,.4)';X.lineWidth=1;
+  for(let i=0;i<W;i+=12){
+    const gy=H*0.68+Math.sin(i*0.012+0.5)*5;
+    const sw=Math.sin(frame*0.02+i*.3)*2;
+    X.beginPath();X.moveTo(i,gy);X.quadraticCurveTo(i+sw,gy-6,i+sw*.5,gy-rand(4,10));X.stroke();
   }
 
-  // ── FIREFLIES ──
-  for (const p of bgParticles) {
-    p.x += p.vx;
-    p.y += p.vy;
-    if (p.x < 0 || p.x > 1) p.vx *= -1;
-    if (p.y < 0 || p.y > 1) p.vy *= -1;
-    const b = 0.4 + Math.sin(frame * p.speed + p.phase) * 0.4;
-    const glow = X.createRadialGradient(p.x * W, p.y * H, 0, p.x * W, p.y * H, p.r * 6);
-    glow.addColorStop(0, `rgba(${p.color},${b})`);
-    glow.addColorStop(1, `rgba(${p.color},0)`);
-    X.fillStyle = glow;
-    X.beginPath(); X.arc(p.x * W, p.y * H, p.r * 6, 0, Math.PI * 2); X.fill();
-    X.fillStyle = `rgba(${p.color},${Math.min(1, b + 0.3)})`;
-    X.beginPath(); X.arc(p.x * W, p.y * H, p.r, 0, Math.PI * 2); X.fill();
+  // ── WORLD OBJECTS (sorted by Y) ──
+  const sorted=[...worldObjects.filter(o=>o.alive)];
+  sorted.push({type:'man',x:manX,baseY:manY,size:1});
+  sorted.sort((a,b)=>a.baseY-b.baseY);
+
+  for(const o of sorted){
+    if(o.type==='tree') drawTree(o);
+    else if(o.type==='rock') drawRock(o);
+    else if(o.type==='animal') drawAnimal(o);
+    else if(o.type==='firepit') drawFirepit(o);
+    else if(o.type==='hut') drawHut(o);
+    else if(o.type==='man') drawMan();
   }
 
-  // ── FALLING LEAVES ──
-  for (let i = fallingLeaves.length - 1; i >= 0; i--) {
-    const lf = fallingLeaves[i];
-    lf.x += lf.vx;
-    lf.y += lf.vy;
-    lf.rot += lf.vr;
-    lf.life -= 0.012;
-    if (lf.life <= 0) { fallingLeaves.splice(i, 1); continue; }
-    lf.vx += Math.sin(frame * 0.03 + lf.phase) * 0.02;
-    X.save();
-    X.translate(lf.x, lf.y);
-    X.rotate(lf.rot);
-    X.globalAlpha = clamp(lf.life, 0, 1);
-    X.fillStyle = lf.color;
-    X.beginPath();
-    X.ellipse(0, 0, 4, 2.5, 0, 0, Math.PI * 2);
-    X.fill();
-    X.globalAlpha = 1;
-    X.restore();
+  // ── PARTICLES ──
+  for(const p of particles){
+    X.globalAlpha=clamp(p.life,0,1);
+    X.fillStyle=p.color;
+    X.beginPath();X.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);X.fill();
   }
+  X.globalAlpha=1;
 
-  // ── CLICK PARTICLES ──
-  for (let i = clickParticles.length - 1; i >= 0; i--) {
-    const cp = clickParticles[i];
-    cp.x += cp.vx;
-    cp.y += cp.vy;
-    cp.vy += 0.08;
-    cp.life -= 0.025;
-    if (cp.life <= 0) { clickParticles.splice(i, 1); continue; }
-    X.globalAlpha = clamp(cp.life, 0, 1);
-    X.fillStyle = cp.color;
-    X.beginPath(); X.arc(cp.x, cp.y, cp.r * cp.life, 0, Math.PI * 2); X.fill();
-    X.globalAlpha = 1;
+  // ── XP BAR TO NEXT ERA ──
+  if(era<ERAS.length-1){
+    const prev=ERAS[era].need;
+    const next=ERAS[era+1].need;
+    const pct=clamp((xp-prev)/(next-prev),0,1);
+    const bw=W*0.4;
+    const bx=(W-bw)/2;
+    const by=H-8;
+    X.fillStyle='rgba(0,0,0,.3)';
+    X.beginPath();X.moveTo(bx+3,by);X.lineTo(bx+bw-3,by);X.quadraticCurveTo(bx+bw,by,bx+bw,by+3);X.lineTo(bx+bw,by+3);X.quadraticCurveTo(bx+bw,by+6,bx+bw-3,by+6);X.lineTo(bx+3,by+6);X.quadraticCurveTo(bx,by+6,bx,by+3);X.quadraticCurveTo(bx,by,bx+3,by);X.fill();
+    const eg=X.createLinearGradient(bx,0,bx+bw*pct,0);
+    eg.addColorStop(0,ERAS[era].color);
+    eg.addColorStop(1,ERAS[Math.min(era+1,ERAS.length-1)].color);
+    X.fillStyle=eg;
+    X.fillRect(bx,by,bw*pct,6);
   }
 }
 
-function drawTree() {
-  const cx = W * 0.5;
-  const baseY = H * 0.88;
-  const topY = baseY - treeHeight * H;
-  const trunkW = 12 + treeLevel * 3;
+function lerpColor(a,b,t){return a.map((v,i)=>Math.round(lerp(v,b[i],t)))}
+function lerpRGB(a,b,t){return`rgb(${lerpColor(a,b,t)})`}
 
-  // ── TRUNK ──
-  const tg = X.createLinearGradient(cx - trunkW, baseY, cx + trunkW, topY);
-  tg.addColorStop(0, '#3d2510');
-  tg.addColorStop(0.5, '#5a3a1a');
-  tg.addColorStop(1, '#4a2e14');
-  X.fillStyle = tg;
+// ── DRAW WORLD OBJECTS ──
+function drawTree(o){
+  const s=o.size;
+  const sx=o.x,sy=o.baseY;
+  const sway=Math.sin(frame*0.015+o.sway)*2*s;
 
+  // Trunk
+  X.fillStyle='#5a3a1a';
+  X.fillRect(sx-3*s,sy-25*s,6*s,28*s);
+  // Crown layers
+  const colors=['#2d7a3e','#38a34a','#2e6d32'];
+  for(let i=0;i<3;i++){
+    const r=(18-i*4)*s;
+    const cx=sx+sway*(1-i*0.2);
+    const cy=sy-30*s-i*8*s;
+    X.fillStyle=colors[i];
+    X.beginPath();X.arc(cx,cy,r,0,Math.PI*2);X.fill();
+  }
+  // Shadow
+  X.fillStyle='rgba(0,0,0,.1)';
+  X.beginPath();X.ellipse(sx,sy+2,15*s,4*s,0,0,Math.PI*2);X.fill();
+}
+
+function drawRock(o){
+  const s=o.size,sx=o.x,sy=o.baseY;
+  X.fillStyle='#6b6b6b';
   X.beginPath();
-  X.moveTo(cx - trunkW, baseY);
-  X.quadraticCurveTo(cx - trunkW - 2, lerp(baseY, topY, 0.5), cx - trunkW * 0.4, topY + 20);
-  X.lineTo(cx + trunkW * 0.4, topY + 20);
-  X.quadraticCurveTo(cx + trunkW + 2, lerp(baseY, topY, 0.5), cx + trunkW, baseY);
-  X.closePath();
-  X.fill();
-
-  // Bark texture
-  X.strokeStyle = 'rgba(30,15,5,.3)';
-  X.lineWidth = 1;
-  for (let i = 0; i < 6 + treeLevel * 2; i++) {
-    const t = rand(0.05, 0.9);
-    const by = lerp(baseY, topY + 25, t);
-    const bw = trunkW * lerp(1, 0.4, t);
-    X.beginPath();
-    X.moveTo(cx - bw * rand(0.2, 0.8), by);
-    X.quadraticCurveTo(cx, by + rand(-5, 5), cx + bw * rand(0.2, 0.8), by + rand(-3, 3));
-    X.stroke();
-  }
-
-  // ── ДУПЛО ──
-  const duploY = lerp(baseY, topY, 0.3);
-  const duploR = 8 + treeLevel;
-  const dg = X.createRadialGradient(cx, duploY, 0, cx, duploY, duploR);
-  dg.addColorStop(0, '#0a0500');
-  dg.addColorStop(0.7, '#1a0e05');
-  dg.addColorStop(1, '#3d2510');
-  X.fillStyle = dg;
-  X.beginPath(); X.ellipse(cx, duploY, duploR, duploR * 1.2, 0, 0, Math.PI * 2); X.fill();
-  X.strokeStyle = '#6B4226';
-  X.lineWidth = 1.5;
-  X.beginPath(); X.ellipse(cx, duploY, duploR, duploR * 1.2, 0, 0, Math.PI * 2); X.stroke();
-
-  // ── BRANCHES ──
-  for (const br of branches) {
-    const by = br.y * H;
-    const sway = Math.sin(frame * 0.015 + br.sway) * 3;
-    const bx = cx + br.side * trunkW * lerp(1, 0.4, (br.y * H - topY) / (baseY - topY));
-    const endX = bx + br.side * br.len * W + sway;
-    const endY = by - rand(5, 15);
-
-    // Branch wood
-    X.strokeStyle = '#5a3a1a';
-    X.lineWidth = 3 + treeLevel * 0.5;
-    X.lineCap = 'round';
-    X.beginPath();
-    X.moveTo(bx, by);
-    X.quadraticCurveTo(bx + br.side * br.len * W * 0.5 + sway * 0.5, by - 10, endX, endY);
-    X.stroke();
-
-    // Leaf cluster at end of branch
-    drawLeafCluster(endX, endY, 16 + treeLevel * 3);
-  }
-
-  // ── CROWN (top) ──
-  drawLeafCluster(cx, topY + 15, 30 + treeLevel * 8);
-  drawLeafCluster(cx - 20, topY + 25, 20 + treeLevel * 4);
-  drawLeafCluster(cx + 20, topY + 25, 20 + treeLevel * 4);
+  X.moveTo(sx-12*s,sy);X.lineTo(sx-10*s,sy-14*s);X.lineTo(sx+2*s,sy-18*s);
+  X.lineTo(sx+13*s,sy-10*s);X.lineTo(sx+11*s,sy);X.closePath();X.fill();
+  X.fillStyle='rgba(200,200,200,.2)';
+  X.beginPath();X.moveTo(sx-5*s,sy-5*s);X.lineTo(sx,sy-15*s);X.lineTo(sx+5*s,sy-8*s);X.closePath();X.fill();
+  X.fillStyle='rgba(0,0,0,.1)';
+  X.beginPath();X.ellipse(sx,sy+2,14*s,3*s,0,0,Math.PI*2);X.fill();
 }
 
-function drawLeafCluster(x, y, r) {
-  // Multiple layered circles for organic look
-  const colors = ['#2d8a3e', '#38a84a', '#45c458', '#2e7d32'];
-  for (let i = 0; i < 4; i++) {
-    const ox = Math.sin(i * 1.8 + frame * 0.008) * r * 0.2;
-    const oy = Math.cos(i * 2.3 + frame * 0.006) * r * 0.15;
-    const cr = r * rand(0.5, 0.8);
-    X.fillStyle = colors[i % colors.length];
-    X.globalAlpha = 0.7;
-    X.beginPath();
-    X.arc(x + ox, y + oy, cr, 0, Math.PI * 2);
-    X.fill();
-  }
-  X.globalAlpha = 1;
-
-  // Highlight
-  X.fillStyle = 'rgba(120,255,120,.08)';
-  X.beginPath(); X.arc(x, y - r * 0.3, r * 0.6, 0, Math.PI * 2); X.fill();
+function drawAnimal(o){
+  const s=o.size,sx=o.x,sy=o.baseY;
+  const bounce=Math.abs(Math.sin(frame*0.05+o.phase))*3;
+  X.save();X.translate(sx,sy-bounce);X.scale(o.dir,1);
+  // Body
+  X.fillStyle='#8B6914';
+  X.beginPath();X.ellipse(0,0,14*s,8*s,0,0,Math.PI*2);X.fill();
+  // Head
+  X.fillStyle='#9B7924';
+  X.beginPath();X.ellipse(12*s,-4*s,7*s,6*s,0,0,Math.PI*2);X.fill();
+  // Eye
+  X.fillStyle='#111';X.beginPath();X.arc(15*s,-6*s,1.5*s,0,Math.PI*2);X.fill();
+  // Legs
+  X.fillStyle='#6B4914';
+  const legOff=Math.sin(frame*0.08+o.phase)*2;
+  X.fillRect(-8*s,6*s,3*s,6*s+legOff);
+  X.fillRect(-2*s,6*s,3*s,6*s-legOff);
+  X.fillRect(5*s,6*s,3*s,6*s+legOff);
+  X.fillRect(10*s,6*s,3*s,6*s-legOff);
+  // Antlers (deer)
+  X.strokeStyle='#5a3a1a';X.lineWidth=1.5*s;X.lineCap='round';
+  X.beginPath();X.moveTo(14*s,-9*s);X.lineTo(12*s,-16*s);X.lineTo(9*s,-18*s);X.stroke();
+  X.beginPath();X.moveTo(14*s,-9*s);X.lineTo(16*s,-16*s);X.lineTo(19*s,-18*s);X.stroke();
+  X.restore();
+  // Shadow
+  X.fillStyle='rgba(0,0,0,.08)';
+  X.beginPath();X.ellipse(sx,sy+12*s,12*s,3*s,0,0,Math.PI*2);X.fill();
 }
 
-function drawSquirrel(sq) {
-  const bob = Math.sin(frame * 0.04 + sq.bobPhase) * 3;
-  const sx = sq.x + Math.sin(frame * 0.01 * sq.speed + sq.phase) * 15;
-  const sy = sq.baseY + bob;
-  const s = 8 * sq.size;
-  const d = sq.dir;
+function drawFirepit(o){
+  const sx=o.x,sy=o.baseY;
+  // Stone ring
+  X.fillStyle='#555';
+  for(let i=0;i<8;i++){
+    const a=i/8*Math.PI*2;
+    X.beginPath();X.arc(sx+Math.cos(a)*12,sy+Math.sin(a)*5,4,0,Math.PI*2);X.fill();
+  }
+  // Fire
+  if(era>=2){
+    for(let i=0;i<5;i++){
+      const fh=15+Math.sin(frame*0.1+i*1.5)*5;
+      const fw=4+Math.sin(frame*0.15+i)*2;
+      const fx=sx+Math.sin(frame*0.08+i*2)*4;
+      const alpha=0.6+Math.sin(frame*0.12+i)*0.2;
+      X.fillStyle=i<2?`rgba(255,100,0,${alpha})`:`rgba(255,200,0,${alpha})`;
+      X.beginPath();X.ellipse(fx,sy-fh*0.5,fw,fh*0.5,0,0,Math.PI*2);X.fill();
+    }
+    // Glow
+    const fg=X.createRadialGradient(sx,sy-8,0,sx,sy-8,40);
+    fg.addColorStop(0,'rgba(255,150,30,.15)');
+    fg.addColorStop(1,'rgba(255,150,30,0)');
+    X.fillStyle=fg;X.beginPath();X.arc(sx,sy-8,40,0,Math.PI*2);X.fill();
+  }
+}
+
+function drawHut(o){
+  const sx=o.x,sy=o.baseY;
+  // Base
+  X.fillStyle='#5a3a1a';
+  X.beginPath();X.moveTo(sx-30,sy);X.lineTo(sx,sy-40);X.lineTo(sx+30,sy);X.closePath();X.fill();
+  // Straw texture
+  X.strokeStyle='#8B6914';X.lineWidth=1.5;
+  for(let i=-20;i<20;i+=6){
+    X.beginPath();X.moveTo(sx+i,sy-5);X.lineTo(sx+i*0.3,sy-32);X.stroke();
+  }
+  // Door
+  X.fillStyle='#2a1a0a';
+  X.beginPath();X.ellipse(sx,sy-2,8,12,0,Math.PI,Math.PI*2,true);X.fill();
+}
+
+// ── DRAW MAN ──
+function drawMan(){
+  const s=1+era*0.12; // grows with era
+  const bounce=manState!=='idle'?Math.abs(Math.sin(manAnimT))*3:Math.sin(frame*0.03)*1;
+  const actionAnim=manState!=='idle'?Math.sin(manAnimT*2):0;
 
   X.save();
-  X.translate(sx, sy);
-  X.scale(d, 1);
+  X.translate(manX,manY-bounce);
+  X.scale(manDir,1);
 
-  // Tail
-  const tailSway = Math.sin(frame * 0.04 + sq.phase) * 5;
-  X.strokeStyle = '#d4790a';
-  X.lineWidth = 3.5;
-  X.lineCap = 'round';
-  X.beginPath();
-  X.moveTo(-3, -1);
-  X.bezierCurveTo(-8, -5 + tailSway * 0.3, -12 + tailSway * 0.4, -14, -8 + tailSway * 0.2, -17);
-  X.stroke();
-  X.strokeStyle = '#f0a030';
-  X.lineWidth = 1.8;
-  X.beginPath();
-  X.moveTo(-3, -2);
-  X.bezierCurveTo(-7, -6 + tailSway * 0.3, -10 + tailSway * 0.4, -13, -7 + tailSway * 0.2, -15);
-  X.stroke();
+  const skinColor=era<3?'#c4956a':'#d4a57a';
+  const hairColor=era<2?'#3a2510':'#4a3520';
 
-  // Body
-  const bg = X.createRadialGradient(0, 1, 0, 0, 0, s);
-  bg.addColorStop(0, '#e8940a');
-  bg.addColorStop(0.7, '#d4790a');
-  bg.addColorStop(1, '#b86208');
-  X.fillStyle = bg;
-  X.beginPath(); X.ellipse(0, 1, s * 0.7, s * 0.8, 0, 0, Math.PI * 2); X.fill();
-
-  // Belly
-  X.fillStyle = '#f5c76a';
-  X.beginPath(); X.ellipse(1, 3, s * 0.38, s * 0.45, 0, 0, Math.PI * 2); X.fill();
-
-  // Head
-  X.fillStyle = '#e8940a';
-  X.beginPath(); X.ellipse(2, -5, s * 0.6, s * 0.55, 0, 0, Math.PI * 2); X.fill();
-
-  // Ears
-  X.fillStyle = '#d4790a';
-  X.beginPath(); X.moveTo(-1, -9); X.lineTo(-3, -14); X.lineTo(1, -10); X.fill();
-  X.beginPath(); X.moveTo(4, -9); X.lineTo(5, -14); X.lineTo(7, -10); X.fill();
-  X.fillStyle = '#f5c76a';
-  X.beginPath(); X.moveTo(0, -9.5); X.lineTo(-2, -12.5); X.lineTo(1.5, -10); X.fill();
-
-  // Eyes
-  X.fillStyle = '#fff';
-  X.beginPath(); X.ellipse(4, -6, 2.2, 2.5, 0, 0, Math.PI * 2); X.fill();
-  X.beginPath(); X.ellipse(0, -6, 1.8, 2.2, 0, 0, Math.PI * 2); X.fill();
-  X.fillStyle = '#111';
-  X.beginPath(); X.arc(4.3, -5.7, 1.3, 0, Math.PI * 2); X.fill();
-  X.beginPath(); X.arc(0.3, -5.7, 1.1, 0, Math.PI * 2); X.fill();
-  X.fillStyle = '#fff';
-  X.beginPath(); X.arc(4.6, -6.3, 0.5, 0, Math.PI * 2); X.fill();
-
-  // Nose
-  X.fillStyle = '#7a3a10';
-  X.beginPath(); X.ellipse(6.5, -4.5, 1.2, 0.8, 0, 0, Math.PI * 2); X.fill();
+  // Shadow
+  X.fillStyle='rgba(0,0,0,.12)';
+  X.beginPath();X.ellipse(0,12*s,12*s,3*s,0,0,Math.PI*2);X.fill();
 
   // Legs
-  X.fillStyle = '#b86208';
-  const legOff = Math.sin(frame * 0.06 + sq.phase) * 1.5;
-  X.beginPath(); X.ellipse(-2, s * 0.7 + legOff, 3, 2, 0.2, 0, Math.PI * 2); X.fill();
-  X.beginPath(); X.ellipse(3, s * 0.7 - legOff, 3, 2, -0.2, 0, Math.PI * 2); X.fill();
+  X.fillStyle=skinColor;
+  const legOff=manState!=='idle'?Math.sin(manAnimT*2)*5:0;
+  X.fillRect(-6*s,8*s,5*s,14*s+legOff);
+  X.fillRect(1*s,8*s,5*s,14*s-legOff);
+
+  // Feet
+  X.fillStyle=era>=3?'#5a3a1a':'#8B6914';
+  X.beginPath();X.ellipse(-3*s,22*s+legOff,4*s,2*s,0,0,Math.PI*2);X.fill();
+  X.beginPath();X.ellipse(4*s,22*s-legOff,4*s,2*s,0,0,Math.PI*2);X.fill();
+
+  // Body
+  const bodyColor=era<2?skinColor:(era<4?'#8B6914':'#6a5a4a');
+  X.fillStyle=bodyColor;
+  X.beginPath();X.ellipse(0,2*s,10*s,12*s,0,0,Math.PI*2);X.fill();
+
+  // Fur/cloth
+  if(era>=1&&era<4){
+    X.fillStyle='#a08060';
+    X.beginPath();X.moveTo(-8*s,-5*s);X.lineTo(0,-8*s);X.lineTo(8*s,-5*s);X.lineTo(6*s,2*s);X.lineTo(-6*s,2*s);X.closePath();X.fill();
+  }
+  if(era>=4){
+    // Tunic
+    X.fillStyle='#4a6a8a';
+    X.beginPath();X.moveTo(-9*s,-6*s);X.lineTo(9*s,-6*s);X.lineTo(8*s,8*s);X.lineTo(-8*s,8*s);X.closePath();X.fill();
+    X.fillStyle='#5a7a9a';
+    X.fillRect(-9*s,-6*s,18*s,3*s);
+  }
+
+  // Arms
+  X.fillStyle=skinColor;
+  const armAngle=actionAnim*0.6;
+  X.save();X.translate(-9*s,-2*s);X.rotate(-0.3+armAngle);
+  X.fillRect(-2*s,0,4*s,12*s);
+  // Tool in hand
+  if(manState==='chop'){
+    X.fillStyle='#666';X.fillRect(-1*s,10*s,2*s,8*s);
+    X.fillStyle='#999';X.fillRect(-3*s,10*s,6*s,3*s);
+  }else if(manState==='hunt'){
+    X.fillStyle='#8B6914';X.fillRect(0,8*s,1.5*s,18*s);
+    X.fillStyle='#888';X.beginPath();X.moveTo(0,8*s);X.lineTo(1.5*s,8*s);X.lineTo(.75*s,4*s);X.closePath();X.fill();
+  }else if(manState==='study'||manState==='think'){
+    // Glowing symbol
+    X.fillStyle=`rgba(255,200,0,${0.5+Math.sin(frame*0.1)*0.3})`;
+    X.font=`${10*s}px serif`;X.fillText('𓂀',0,12*s);
+  }
+  X.restore();
+
+  // Right arm
+  X.save();X.translate(9*s,-2*s);X.rotate(0.3-armAngle);
+  X.fillStyle=skinColor;
+  X.fillRect(-2*s,0,4*s,12*s);
+  X.restore();
+
+  // Head
+  const headR=8*s;
+  X.fillStyle=skinColor;
+  X.beginPath();X.arc(0,-12*s,headR,0,Math.PI*2);X.fill();
+
+  // Hair
+  X.fillStyle=hairColor;
+  if(era<3){
+    // Messy caveman hair
+    X.beginPath();X.arc(0,-14*s,headR,Math.PI,Math.PI*2);X.fill();
+    for(let i=-3;i<=3;i++){
+      X.beginPath();X.moveTo(i*2.5*s,-19*s);
+      X.quadraticCurveTo(i*3*s+Math.sin(frame*0.03+i)*2,-24*s-Math.abs(i)*s,i*2*s,-20*s);
+      X.stroke();
+    }
+  }else{
+    // Neater hair
+    X.beginPath();X.arc(0,-14*s,headR*0.95,Math.PI+0.3,Math.PI*2-0.3);X.fill();
+  }
+
+  // Beard (era>=1)
+  if(era>=1&&era<5){
+    X.fillStyle=hairColor;
+    X.beginPath();X.ellipse(3*s,-5*s,4*s,5*s*Math.min(era,3)*0.4,0,0,Math.PI*2);X.fill();
+  }
+
+  // Eyes
+  X.fillStyle='#fff';
+  X.beginPath();X.ellipse(-3*s,-13*s,2.5*s,2.8*s,0,0,Math.PI*2);X.fill();
+  X.beginPath();X.ellipse(3*s,-13*s,2.5*s,2.8*s,0,0,Math.PI*2);X.fill();
+  X.fillStyle='#2a1a0a';
+  const lookX=manState!=='idle'?1:0;
+  X.beginPath();X.arc(-3*s+lookX,-13*s,1.3*s,0,Math.PI*2);X.fill();
+  X.beginPath();X.arc(3*s+lookX,-13*s,1.3*s,0,Math.PI*2);X.fill();
+  X.fillStyle='#fff';
+  X.beginPath();X.arc(-2.5*s,-13.5*s,.5*s,0,Math.PI*2);X.fill();
+  X.beginPath();X.arc(3.5*s,-13.5*s,.5*s,0,Math.PI*2);X.fill();
+
+  // Nose
+  X.fillStyle='#b08060';
+  X.beginPath();X.ellipse(0,-10*s,1.5*s,1*s,0,0,Math.PI*2);X.fill();
+
+  // Mouth
+  X.strokeStyle='#8a6040';X.lineWidth=1*s;
+  X.beginPath();X.arc(0,-8*s,2*s,0.2,Math.PI-0.2);X.stroke();
+
+  // Brow ridge (early eras)
+  if(era<3){
+    X.fillStyle='rgba(100,60,30,.3)';
+    X.fillRect(-6*s,-16*s,12*s,2*s);
+  }
+
+  // Wisdom glow (era 5)
+  if(era>=5){
+    const wg=X.createRadialGradient(0,-12*s,headR,0,-12*s,headR*2.5);
+    wg.addColorStop(0,'rgba(255,220,100,.15)');
+    wg.addColorStop(1,'rgba(255,220,100,0)');
+    X.fillStyle=wg;X.beginPath();X.arc(0,-12*s,headR*2.5,0,Math.PI*2);X.fill();
+  }
 
   X.restore();
 }
 
-// ── SHOP UI ──
-function buildShop() {
-  const shop = document.getElementById('shop');
-  shop.innerHTML = '';
-  for (const u of upgrades) {
-    const cost = getCost(u);
-    const card = document.createElement('div');
-    card.className = 'card' + (nuts >= cost ? ' affordable' : '');
-    card.innerHTML = `
-      <div class="card-lvl">Lv.${u.level}</div>
-      <div class="card-ico">${u.ico}</div>
-      <div class="card-name">${u.name}</div>
-      <div class="card-desc">${u.desc}</div>
-      <div class="card-cost">🌰 ${fmtNum(cost)}</div>
-    `;
-    card.addEventListener('click', () => buyUpgrade(u));
-    shop.appendChild(card);
-  }
-}
-
-function refreshShop() {
-  const cards = document.querySelectorAll('.card');
-  let i = 0;
-  for (const u of upgrades) {
-    if (cards[i]) {
-      const cost = getCost(u);
-      cards[i].className = 'card' + (nuts >= cost ? ' affordable' : '');
-      cards[i].querySelector('.card-lvl').textContent = 'Lv.' + u.level;
-      cards[i].querySelector('.card-cost').innerHTML = '🌰 ' + fmtNum(cost);
-    }
-    i++;
-  }
-}
-
-function buyUpgrade(u) {
-  const cost = getCost(u);
-  if (nuts < cost) return;
-  nuts -= cost;
-  u.level++;
-  u.effect();
-  refreshShop();
-  showNotif(`${u.ico} ${u.name} → Lv.${u.level}`);
-}
-
-// ── TAP HANDLING ──
-const tapZone = document.getElementById('tap-zone');
-
-function handleTap(ex, ey) {
-  const amount = nutsPerClick;
-  nuts += amount;
-
-  // Float text
-  const ft = document.createElement('div');
-  ft.className = 'float-text';
-  ft.textContent = '+' + fmtNum(amount);
-  ft.style.left = ex + rand(-20, 20) + 'px';
-  ft.style.top = ey - 20 + 'px';
-  document.body.appendChild(ft);
-  setTimeout(() => ft.remove(), 950);
-
-  // Click particles
-  for (let i = 0; i < 5; i++) {
-    clickParticles.push({
-      x: ex, y: ey,
-      vx: rand(-3, 3), vy: rand(-5, -1),
-      r: rand(2, 5),
-      color: ['#ffd700','#ffb300','#ff8f00','#fff8e1'][Math.floor(rand(0,4))],
-      life: 1
-    });
-  }
-
-  // Shake tree leaves
-  spawnFallingLeaves(2);
-
-  // Subtle tree shake via canvas — handled in render
-}
-
-tapZone.addEventListener('click', (e) => handleTap(e.clientX, e.clientY));
-tapZone.addEventListener('touchstart', (e) => {
+// ── TAP ON CANVAS → walk there ──
+C.addEventListener('pointerdown',(e)=>{
   e.preventDefault();
-  const t = e.touches[0];
-  handleTap(t.clientX, t.clientY);
-}, {passive: false});
-
-function spawnFallingLeaves(n) {
-  const cx = W * 0.5;
-  const topY = H * (0.88 - treeHeight) + 20;
-  for (let i = 0; i < n; i++) {
-    fallingLeaves.push({
-      x: cx + rand(-40, 40),
-      y: topY + rand(-10, 30),
-      vx: rand(-0.8, 0.8),
-      vy: rand(0.5, 1.5),
-      vr: rand(-0.05, 0.05),
-      rot: rand(0, Math.PI * 2),
-      life: 1,
-      phase: rand(0, 10),
-      color: ['#2d8a3e','#45c458','#8BC34A','#66BB6A','#FDD835'][Math.floor(rand(0,5))]
-    });
+  if(!currentAction){
+    manTargetX=clamp(e.clientX,20,W-20);
+    manTargetY=clamp(e.clientY,H*0.4,H*0.85);
   }
-}
-
-// ── NOTIFICATION ──
-function showNotif(text) {
-  const el = document.createElement('div');
-  el.className = 'notif';
-  el.textContent = text;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 2100);
-}
-
-// ── HUD ──
-function updateHUD() {
-  document.getElementById('r-nuts').textContent = fmtNum(nuts);
-  document.getElementById('r-sq').textContent = fmtNum(nutsPerSec);
-}
-
-// ── SAVE / LOAD ──
-function saveGame() {
-  const data = {
-    nuts, nutsPerClick, treeLevel, treeHeight, treeBranches, leafCount,
-    levels: upgrades.map(u => u.level),
-    squirrelCount: squirrelSlots.length
-  };
-  try { localStorage.setItem('belkin_les', JSON.stringify(data)); } catch(e) {}
-}
-
-function loadGame() {
-  try {
-    const raw = localStorage.getItem('belkin_les');
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    nuts = data.nuts || 0;
-    for (let i = 0; i < upgrades.length; i++) {
-      upgrades[i].level = (data.levels && data.levels[i]) || 0;
-    }
-    // Replay effects
-    for (const u of upgrades) {
-      if (u.level > 0) {
-        // Re-apply effects without adding squirrels — rebuild manually
-        if (u.id === 'click') nutsPerClick = 1 + u.level;
-        if (u.id === 'branch') { treeBranches = 3 + u.level * 2; leafCount = 12 + u.level * 5; }
-        if (u.id === 'tree') { treeLevel = 1 + u.level; treeHeight = Math.min(0.75, 0.4 + u.level * 0.06); }
-      }
-    }
-    rebuildTree();
-    // Restore squirrels
-    const sqCount = data.squirrelCount || upgrades.find(u=>u.id==='squirrel').level;
-    squirrelSlots = [];
-    for (let i = 0; i < sqCount; i++) addSquirrel();
-    recalcPS();
-  } catch(e) {}
-}
+});
 
 // ── MAIN LOOP ──
-let lastSave = 0;
-let lastIdle = 0;
-
-function loop(ts) {
-  frame++;
-
-  // Idle income (every ~100ms for smoothness)
-  if (ts - lastIdle > 100) {
-    const dt = (ts - lastIdle) / 1000;
-    nuts += nutsPerSec * dt;
-    lastIdle = ts;
-
-    // Occasional leaf drop
-    if (nutsPerSec > 0 && Math.random() < 0.05) {
-      spawnFallingLeaves(1);
-    }
-  }
-
-  // Cap particles to avoid lag
-  if (fallingLeaves.length > 30) fallingLeaves.splice(0, fallingLeaves.length - 30);
-  if (clickParticles.length > 25) clickParticles.splice(0, clickParticles.length - 25);
-
+let last=0;
+function loop(ts){
+  const dt=Math.min((ts-last)/1000,0.05);
+  last=ts;
+  update(dt);
   render();
-  updateHUD();
-  refreshShop();
-
-  // Auto-save every 5s
-  if (ts - lastSave > 5000) { saveGame(); lastSave = ts; }
-
   requestAnimationFrame(loop);
 }
-
-// ── INIT ──
-loadGame();
-buildShop();
+init();
 requestAnimationFrame(loop);
-
 </script>
 </body>
 </html>
