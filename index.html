@@ -3,1544 +3,650 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>БЕЛКИН ХАОС</title>
+<title>Белкин Лес</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:'Segoe UI',system-ui,sans-serif}
-canvas{display:block;position:absolute;top:0;left:0;touch-action:none}
-/* ── OVERLAYS ── */
-.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;pointer-events:auto;transition:opacity .3s}
-.ov.hide{opacity:0;pointer-events:none}
-.ov-bg{position:absolute;inset:0;background:rgba(10,10,30,.82)}
-.ov-content{position:relative;z-index:1;text-align:center;color:#fff;padding:20px}
-.ov-content h1{font-size:28px;margin-bottom:8px;text-shadow:0 2px 12px rgba(255,180,0,.5)}
-.ov-content p{font-size:15px;opacity:.8;margin-bottom:16px;line-height:1.5}
-.btn{display:inline-block;padding:14px 36px;border:none;border-radius:30px;font-size:17px;font-weight:700;cursor:pointer;color:#fff;background:linear-gradient(135deg,#ff8a00,#e52e71);box-shadow:0 4px 20px rgba(229,46,113,.4);transition:transform .15s,box-shadow .15s;margin:6px}
-.btn:active{transform:scale(.95);box-shadow:0 2px 10px rgba(229,46,113,.3)}
-.btn-sec{background:linear-gradient(135deg,#667eea,#764ba2)}
-/* ── HUD ── */
-#hud{position:fixed;top:0;left:0;right:0;z-index:40;pointer-events:none;display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
-#hud.hide{display:none}
-.hud-pill{background:rgba(0,0,0,.55);backdrop-filter:blur(8px);border-radius:20px;padding:6px 14px;color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
-.hud-pill .ico{width:20px;height:20px;border-radius:50%}
-/* ── TOOLBAR ── */
-#toolbar{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;justify-content:center;gap:10px;padding:12px 10px 20px;pointer-events:auto}
-#toolbar.hide{display:none}
-.tool{width:58px;height:58px;border-radius:16px;border:2px solid rgba(255,255,255,.2);background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;cursor:pointer;transition:border-color .15s,transform .15s;position:relative}
-.tool.active{border-color:#ff8a00;transform:scale(1.08);box-shadow:0 0 16px rgba(255,138,0,.4)}
-.tool canvas{width:36px;height:36px;border-radius:8px}
-.tool .cnt{position:absolute;top:-6px;right:-6px;background:#e52e71;border-radius:50%;width:20px;height:20px;font-size:11px;display:flex;align-items:center;justify-content:center}
-/* ── TUTORIAL ── */
-#tut{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:45;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);border-radius:16px;padding:10px 20px;color:#fff;font-size:13px;text-align:center;max-width:320px;pointer-events:none;transition:opacity .5s}
-#tut.hide{opacity:0}
-/* ── STARS ── */
-.stars-row{display:flex;gap:8px;justify-content:center;margin:12px 0}
-.star-icon{width:36px;height:36px;position:relative}
-.star-icon svg{width:100%;height:100%}
-.star-icon.off svg{opacity:.3}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
+body{background:#0a1628}
+canvas{display:block;width:100%;height:100%}
+
+/* ── UI LAYER ── */
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10;display:flex;flex-direction:column}
+
+/* Top bar */
+.topbar{display:flex;justify-content:space-between;padding:12px 16px;pointer-events:none}
+.res{background:rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:20px;padding:7px 16px;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.08)}
+.res-ico{font-size:16px}
+
+/* Bottom shop */
+.shop{margin-top:auto;padding:10px 12px 24px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;pointer-events:auto;scrollbar-width:none}
+.shop::-webkit-scrollbar{display:none}
+.card{flex:0 0 auto;width:130px;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:18px;padding:12px;color:#fff;border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:transform .15s,border-color .15s;position:relative}
+.card:active{transform:scale(.96)}
+.card.affordable{border-color:rgba(255,180,0,.35)}
+.card-name{font-size:12px;font-weight:700;margin-bottom:4px;line-height:1.2}
+.card-desc{font-size:10px;opacity:.55;margin-bottom:8px;line-height:1.3}
+.card-cost{font-size:12px;font-weight:700;color:#ffd700;display:flex;align-items:center;gap:4px}
+.card-lvl{position:absolute;top:8px;right:10px;font-size:10px;opacity:.4;font-weight:700}
+.card-ico{font-size:22px;margin-bottom:6px}
+
+/* Center tap area */
+.tap-zone{position:fixed;top:30%;left:50%;transform:translateX(-50%);width:200px;height:260px;pointer-events:auto;z-index:5;cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+/* Float text */
+.float-text{position:fixed;pointer-events:none;z-index:20;color:#ffd700;font-weight:800;font-size:18px;text-shadow:0 2px 8px rgba(0,0,0,.5);animation:floatUp .9s ease-out forwards}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(.7)}}
+
+/* Notification */
+.notif{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);backdrop-filter:blur(10px);border-radius:14px;padding:8px 20px;color:#fff;font-size:13px;font-weight:600;z-index:30;pointer-events:none;animation:notifAnim 2s ease-out forwards;border:1px solid rgba(255,180,0,.2)}
+@keyframes notifAnim{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}75%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-5px)}}
 </style>
 </head>
 <body>
 
 <canvas id="c"></canvas>
 
-<!-- HUD -->
-<div id="hud" class="hide">
-  <div class="hud-pill" id="hud-squirrels"><span class="ico" style="background:#f90"></span><span id="h-sq">0/0</span></div>
-  <div class="hud-pill" id="hud-combo"><span style="color:#0f0">COMBO</span><span id="h-combo">x1</span></div>
-  <div class="hud-pill" id="hud-time"><span id="h-time">0:00</span></div>
-</div>
-
-<!-- TOOLBAR -->
-<div id="toolbar" class="hide"></div>
-
-<!-- TUTORIAL -->
-<div id="tut" class="hide"></div>
-
-<!-- START SCREEN -->
-<div class="ov" id="scr-start">
-  <div class="ov-bg"></div>
-  <div class="ov-content">
-    <h1>БЕЛКИН ХАОС</h1>
-    <p>Строй путь. Думай на 3 хода вперёд.<br>Доведи белок до дупла с орехом.</p>
-    <button class="btn" id="btn-start">ИГРАТЬ</button>
+<div id="ui">
+  <div class="topbar">
+    <div class="res"><span class="res-ico">🌰</span><span id="r-nuts">0</span></div>
+    <div class="res"><span class="res-ico">🐿️</span><span id="r-sq">0</span>/с</div>
   </div>
+  <div class="shop" id="shop"></div>
 </div>
 
-<!-- WIN SCREEN -->
-<div class="ov hide" id="scr-win">
-  <div class="ov-bg"></div>
-  <div class="ov-content">
-    <h1 id="win-title">УРОВЕНЬ ПРОЙДЕН!</h1>
-    <div class="stars-row" id="win-stars"></div>
-    <p id="win-info"></p>
-    <button class="btn" id="btn-retry-w">ЗАНОВО</button>
-  </div>
-</div>
-
-<!-- LOSE SCREEN -->
-<div class="ov hide" id="scr-lose">
-  <div class="ov-bg"></div>
-  <div class="ov-content">
-    <h1>ПРОВАЛ</h1>
-    <p id="lose-info">Слишком мало белок добралось до дупла.</p>
-    <button class="btn" id="btn-retry-l">ЗАНОВО</button>
-  </div>
-</div>
+<div class="tap-zone" id="tap-zone"></div>
 
 <script>
-// ═══════════════════════════════════════════
-// БЕЛКИН ХАОС — single-level polished build
-// ═══════════════════════════════════════════
+// ══════════════════════════════
+//  БЕЛКИН ЛЕС — idle clicker
+// ══════════════════════════════
 
-// ── CANVAS SETUP ──
+// ── CANVAS ──
 const C = document.getElementById('c');
 const X = C.getContext('2d');
-let W, H, DPR, SC, OX, OY;
-
-// World units: 400 x 700 (vertical phone)
-const WW = 400, WH = 700;
+let W, H, DPR;
 
 function resize() {
   W = innerWidth; H = innerHeight;
-  DPR = Math.min(devicePixelRatio || 1, 3);
+  DPR = Math.min(devicePixelRatio || 1, 2);
   C.width = W * DPR; C.height = H * DPR;
-  C.style.width = W + 'px'; C.style.height = H + 'px';
-  SC = Math.min(W / WW, H / WH);
-  OX = (W - WW * SC) / 2;
-  OY = (H - WH * SC) / 2;
 }
-addEventListener('resize', resize); resize();
-
-function toScreen(wx, wy) { return [OX + wx * SC, OY + wy * SC]; }
-function toWorld(sx, sy) { return [(sx - OX) / SC, (sy - OY) / SC]; }
-function sLen(v) { return v * SC; }
+addEventListener('resize', resize);
+resize();
 
 // ── UTILS ──
-function lerp(a, b, t) { return a + (b - a) * t; }
-function clamp(v, mn, mx) { return v < mn ? mn : v > mx ? mx : v; }
-function dist(x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); }
-function rr(x, y, w, h, r) { X.beginPath(); X.moveTo(x + r, y); X.lineTo(x + w - r, y); X.quadraticCurveTo(x + w, y, x + w, y + r); X.lineTo(x + w, y + h - r); X.quadraticCurveTo(x + w, y + h, x + w - r, y + h); X.lineTo(x + r, y + h); X.quadraticCurveTo(x, y + h, x, y + h - r); X.lineTo(x, y + r); X.quadraticCurveTo(x, y, x + r, y); X.closePath(); }
-function rand(a, b) { return a + Math.random() * (b - a); }
-
-// ── PHYSICS CONSTANTS ──
-const GRAV = 0.32;
-const FRICTION = 0.88;
-const BOUNCE = 0.3;
-const TRAMP_BOUNCE = -11;
-
-// ── LEVEL DEFINITION ──
-const LV = {
-  totalSquirrels: 8,
-  needToWin: 5,
-  wavePairs: 2,        // squirrels per wave
-  waveDelay: 4,        // seconds between waves
-  timeLimitStar3: 30,  // seconds for 3-star
-  spawn: { x: 60, y: 68 },
-  goal: { x: 330, y: 620 },  // дупло
-  nut: { x: 200, y: 68 },
-  platforms: [
-    // top area — spawn shelf
-    { x: 10, y: 100, w: 160, h: 18 },
-    // nut shelf
-    { x: 160, y: 100, w: 100, h: 18 },
-    // middle-left
-    { x: 30, y: 230, w: 120, h: 16 },
-    // middle-right (gap → need bridge)
-    { x: 230, y: 310, w: 130, h: 16 },
-    // lower-left
-    { x: 20, y: 420, w: 140, h: 16 },
-    // lower-right shelf → goal area
-    { x: 220, y: 520, w: 160, h: 16 },
-    // ground — goal platform
-    { x: 10, y: 645, w: 380, h: 20 },
-  ],
-  hazards: [
-    // spikes at bottom of gap
-    { x: 160, y: 630, w: 60, h: 15, type: 'spike' },
-    // water pool
-    { x: 80, y: 520, w: 100, h: 30, type: 'water' },
-  ],
-  tools: {
-    plank: { count: 5, w: 80, h: 10, color: '#b8834a', durability: 2 },
-    box: { count: 3, w: 28, h: 28, color: '#8B7355', durability: 99 },
-    trampoline: { count: 2, w: 50, h: 8, color: '#4488ff', durability: 99 },
-    portal: { count: 1, w: 20, h: 30, color: '#a855f7', durability: 99 },
-    balloon: { count: 1, w: 16, h: 20, color: '#f43f5e', durability: 1 },
-  }
+const rand = (a, b) => a + Math.random() * (b - a);
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmtNum = n => {
+  if (n >= 1e12) return (n/1e12).toFixed(1)+'T';
+  if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return Math.floor(n).toString();
 };
 
 // ── GAME STATE ──
-let phase = 'start'; // start | plan | run | win | lose
-let squirrels = [];
-let placedItems = [];
-let portalA = null, portalB = null;
-let placingPortalStep = 0; // 0=none, 1=placing A, 2=placing B
-let nutObj = null;
-let particles = [];
-let time = 0;
-let savedCount = 0;
-let lostCount = 0;
-let combo = 0;
-let maxCombo = 0;
-let waveTimer = 0;
-let wavesSpawned = 0;
-let selectedTool = null;
-let ghostAngle = 0;
-let ghostPos = null;
-let tutText = '';
-let tutTimer = 0;
-let frameCount = 0;
+let nuts = 0;
+let nutsPerClick = 1;
+let nutsPerSec = 0;
+let treeLevel = 1;
+let treeBranches = 3;
+let treeHeight = 0.4; // 0..1 of screen
+let leafCount = 12;
+let squirrelSlots = [];
+let bgParticles = []; // fireflies
+let fallingLeaves = [];
+let clickParticles = [];
+let frame = 0;
 
-// ── CACHED TEXTURES ──
-let bgCanvas, bgReady = false;
-let starField = [];
+// ── UPGRADES ──
+const upgrades = [
+  { id:'click', name:'Сильный тап', desc:'Орехов за клик +1', ico:'👆', baseCost:10, costMul:1.8, level:0, effect(){ nutsPerClick = 1 + this.level; }},
+  { id:'branch', name:'Новая ветка', desc:'Больше веток = больше белок', ico:'🌿', baseCost:25, costMul:2.2, level:0, effect(){ treeBranches = 3 + this.level * 2; leafCount = 12 + this.level * 5; rebuildTree(); }},
+  { id:'squirrel', name:'Белка-сборщик', desc:'+1 🐿️ орех/сек', ico:'🐿️', baseCost:50, costMul:2.0, level:0, effect(){ addSquirrel(); recalcPS(); }},
+  { id:'golden', name:'Золотой орех', desc:'Орехов/сек ×1.5', ico:'✨', baseCost:300, costMul:3.0, level:0, effect(){ recalcPS(); }},
+  { id:'tree', name:'Рост дерева', desc:'Дерево выше и красивее', ico:'🌳', baseCost:150, costMul:2.5, level:0, effect(){ treeLevel = 1 + this.level; treeHeight = Math.min(0.75, 0.4 + this.level * 0.06); rebuildTree(); }},
+  { id:'duplo', name:'Уютное дупло', desc:'+3 🐿️ орех/сек', ico:'🏠', baseCost:500, costMul:2.8, level:0, effect(){ recalcPS(); }},
+];
 
-function buildBg() {
-  bgCanvas = document.createElement('canvas');
-  bgCanvas.width = C.width; bgCanvas.height = C.height;
-  const bx = bgCanvas.getContext('2d');
-  bx.scale(DPR, DPR);
+function getCost(u) { return Math.floor(u.baseCost * Math.pow(u.costMul, u.level)); }
 
-  // Sky gradient
-  const sky = bx.createLinearGradient(0, 0, 0, H);
-  sky.addColorStop(0, '#0f0c29');
-  sky.addColorStop(0.4, '#1a1a4e');
-  sky.addColorStop(0.7, '#24243e');
-  sky.addColorStop(1, '#1a1a2e');
-  bx.fillStyle = sky;
-  bx.fillRect(0, 0, W, H);
-
-  // Stars
-  starField = [];
-  for (let i = 0; i < 60; i++) {
-    starField.push({ x: rand(0, W), y: rand(0, H * 0.5), r: rand(0.5, 2), b: rand(0.3, 1), sp: rand(0.01, 0.03) });
-  }
-  for (const s of starField) {
-    bx.beginPath();
-    bx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    bx.fillStyle = `rgba(255,255,240,${s.b})`;
-    bx.fill();
-  }
-
-  // Moon
-  const [mx, my] = [W * 0.8, H * 0.1];
-  const mg = bx.createRadialGradient(mx, my, 0, mx, my, 30);
-  mg.addColorStop(0, 'rgba(255,250,220,.9)');
-  mg.addColorStop(0.5, 'rgba(255,240,200,.3)');
-  mg.addColorStop(1, 'rgba(255,240,200,0)');
-  bx.fillStyle = mg;
-  bx.beginPath(); bx.arc(mx, my, 30, 0, Math.PI * 2); bx.fill();
-  bx.fillStyle = '#fffbe6';
-  bx.beginPath(); bx.arc(mx, my, 12, 0, Math.PI * 2); bx.fill();
-
-  // Distant trees silhouettes
-  bx.fillStyle = 'rgba(10,20,10,.5)';
-  for (let i = 0; i < 12; i++) {
-    const tx = i * (W / 11) - 10;
-    const th = rand(40, 80);
-    const tw = rand(20, 35);
-    const ty = OY + WH * SC - th * 0.3;
-    bx.beginPath();
-    bx.moveTo(tx, ty + th);
-    bx.lineTo(tx + tw / 2, ty);
-    bx.lineTo(tx + tw, ty + th);
-    bx.fill();
-  }
-
-  bgReady = true;
+function recalcPS() {
+  const sqLvl = upgrades.find(u=>u.id==='squirrel').level;
+  const goldLvl = upgrades.find(u=>u.id==='golden').level;
+  const duploLvl = upgrades.find(u=>u.id==='duplo').level;
+  nutsPerSec = (sqLvl * 1 + duploLvl * 3) * Math.pow(1.5, goldLvl);
 }
 
-// ── SQUIRREL CLASS ──
-class Squirrel {
-  constructor(x, y, delay) {
-    this.x = x; this.y = y;
-    this.vx = 0; this.vy = 0;
-    this.r = 12;
-    this.dir = 1;
-    this.grounded = false;
-    this.alive = true;
-    this.saved = false;
-    this.hasNut = false;
-    this.delay = delay; // seconds before active
-    this.runFrame = 0;
-    this.blinkT = rand(2, 5);
-    this.blinking = false;
-    this.breathT = 0;
-    this.balloon = null; // attached balloon item ref
-    this.tailPhase = rand(0, Math.PI * 2);
-  }
+// ── SQUIRREL SPRITES (world coords) ──
+function addSquirrel() {
+  // Place on a random branch position
+  const slot = {
+    x: rand(W * 0.25, W * 0.75),
+    baseY: rand(H * 0.25, H * 0.65),
+    phase: rand(0, Math.PI * 2),
+    speed: rand(0.3, 0.8),
+    dir: Math.random() > 0.5 ? 1 : -1,
+    size: rand(0.8, 1.1),
+    bobPhase: rand(0, 10),
+  };
+  squirrelSlots.push(slot);
 }
 
-// ── NUT ──
-class Nut {
-  constructor(x, y) {
-    this.x = x; this.y = y;
-    this.vx = 0; this.vy = 0;
-    this.r = 8;
-    this.grounded = false;
-    this.carried = false;
-    this.carrier = null;
-    this.glow = 0;
+// ── TREE DATA ──
+let branches = [];
+function rebuildTree() {
+  branches = [];
+  const cx = 0.5; // center x ratio
+  const baseY = 0.88; // trunk base ratio
+  const topY = baseY - treeHeight;
+  for (let i = 0; i < treeBranches; i++) {
+    const t = (i + 0.5) / treeBranches;
+    const y = lerp(baseY - 0.05, topY + 0.05, t);
+    const side = (i % 2 === 0) ? -1 : 1;
+    const len = rand(0.08, 0.18) * (1 - t * 0.3);
+    branches.push({ y, side, len, sway: rand(0, Math.PI * 2) });
   }
 }
+rebuildTree();
 
-// ── PLACED ITEM ──
-class PlacedItem {
-  constructor(type, x, y, angle) {
-    this.type = type;
-    this.x = x; this.y = y;
-    this.angle = angle || 0;
-    const def = LV.tools[type];
-    this.w = def.w;
-    this.h = def.h;
-    this.color = def.color;
-    this.durability = def.durability;
-    this.maxDur = def.durability;
-    this.vx = 0; this.vy = 0;
-    this.fixed = (type !== 'balloon');
-    this.isPortal = (type === 'portal');
-    this.portalSide = null; // 'A' or 'B'
-    this.age = 0;
-  }
+// ── FIREFLIES ──
+for (let i = 0; i < 15; i++) {
+  bgParticles.push({
+    x: rand(0, 1), y: rand(0, 1),
+    vx: rand(-0.0003, 0.0003), vy: rand(-0.0005, 0.0001),
+    r: rand(1.5, 3), phase: rand(0, Math.PI * 2), speed: rand(0.02, 0.05),
+    color: Math.random() > 0.5 ? '180,255,100' : '255,220,80'
+  });
 }
 
-// ── PARTICLE ──
-class Particle {
-  constructor(x, y, vx, vy, color, life) {
-    this.x = x; this.y = y; this.vx = vx; this.vy = vy;
-    this.color = color; this.life = life; this.maxLife = life;
-    this.r = rand(2, 5);
-  }
-}
-
-// ── INIT GAME ──
-function initGame() {
-  phase = 'run';
-  squirrels = [];
-  placedItems = [];
-  portalA = null; portalB = null;
-  placingPortalStep = 0;
-  particles = [];
-  time = 0;
-  savedCount = 0;
-  lostCount = 0;
-  combo = 0;
-  maxCombo = 0;
-  waveTimer = 0;
-  wavesSpawned = 0;
-  selectedTool = null;
-  ghostAngle = 0;
-  ghostPos = null;
-  frameCount = 0;
-
-  // Reset tool counts
-  for (const k in LV.tools) LV.tools[k]._used = 0;
-
-  // Create nut
-  nutObj = new Nut(LV.nut.x, LV.nut.y);
-
-  // Build toolbar
-  buildToolbar();
-
-  // Show HUD
-  document.getElementById('hud').classList.remove('hide');
-  document.getElementById('toolbar').classList.remove('hide');
-
-  // Tutorial
-  showTut('Выбери инструмент внизу.\nНажми на карту, чтобы установить.\nQ/E или свайп — поворот.', 6);
-
-  // Spawn first wave immediately
-  spawnWave();
-}
-
-function spawnWave() {
-  const n = Math.min(LV.wavePairs, LV.totalSquirrels - (wavesSpawned * LV.wavePairs + lostCount + savedCount));
-  if (n <= 0) return;
-  for (let i = 0; i < n; i++) {
-    const sq = new Squirrel(LV.spawn.x + i * 20, LV.spawn.y - 20, i * 0.5);
-    squirrels.push(sq);
-  }
-  wavesSpawned++;
-  waveTimer = 0;
-}
-
-// ── TOOLBAR ──
-function buildToolbar() {
-  const tb = document.getElementById('toolbar');
-  tb.innerHTML = '';
-  for (const key in LV.tools) {
-    const def = LV.tools[key];
-    const remaining = def.count - (def._used || 0);
-    const div = document.createElement('div');
-    div.className = 'tool';
-    div.dataset.tool = key;
-
-    const ic = document.createElement('canvas');
-    ic.width = 72; ic.height = 72;
-    drawToolIcon(ic, key);
-    div.appendChild(ic);
-
-    const cnt = document.createElement('div');
-    cnt.className = 'cnt';
-    cnt.id = 'cnt-' + key;
-    cnt.textContent = remaining;
-    div.appendChild(cnt);
-
-    const lbl = document.createElement('div');
-    lbl.style.cssText = 'font-size:9px;margin-top:2px;opacity:.7';
-    lbl.textContent = {plank:'Доска',box:'Ящик',trampoline:'Батут',portal:'Портал',balloon:'Шарик'}[key];
-    div.appendChild(lbl);
-
-    div.addEventListener('click', () => selectTool(key));
-    div.addEventListener('touchstart', (e) => { e.preventDefault(); selectTool(key); }, {passive:false});
-    tb.appendChild(div);
-  }
-}
-
-function drawToolIcon(canvas, type) {
-  const cx = canvas.getContext('2d');
-  cx.clearRect(0, 0, 72, 72);
-  const m = 36;
-  if (type === 'plank') {
-    cx.fillStyle = '#b8834a';
-    cx.save(); cx.translate(m, m); cx.rotate(-0.3);
-    rr.call(null, 0, 0, 0, 0, 0); // not using rr here
-    cx.fillRect(-30, -4, 60, 8);
-    cx.strokeStyle = '#8B6914'; cx.lineWidth = 1;
-    cx.strokeRect(-30, -4, 60, 8);
-    cx.restore();
-  } else if (type === 'box') {
-    cx.fillStyle = '#8B7355';
-    cx.fillRect(m - 12, m - 12, 24, 24);
-    cx.strokeStyle = '#6B5335'; cx.lineWidth = 1.5;
-    cx.strokeRect(m - 12, m - 12, 24, 24);
-    cx.strokeStyle = '#6B5335';
-    cx.beginPath(); cx.moveTo(m, m - 12); cx.lineTo(m, m + 12); cx.stroke();
-    cx.beginPath(); cx.moveTo(m - 12, m); cx.lineTo(m + 12, m); cx.stroke();
-  } else if (type === 'trampoline') {
-    cx.fillStyle = '#4488ff';
-    cx.fillRect(m - 20, m - 3, 40, 6);
-    cx.fillStyle = '#333';
-    cx.fillRect(m - 18, m + 3, 4, 10);
-    cx.fillRect(m + 14, m + 3, 4, 10);
-    cx.strokeStyle = '#66aaff'; cx.lineWidth = 1;
-    cx.beginPath(); cx.moveTo(m - 20, m - 3); cx.bezierCurveTo(m - 10, m - 8, m + 10, m - 8, m + 20, m - 3); cx.stroke();
-  } else if (type === 'portal') {
-    const g = cx.createRadialGradient(m, m, 0, m, m, 18);
-    g.addColorStop(0, '#c084fc');
-    g.addColorStop(0.6, '#a855f7');
-    g.addColorStop(1, 'rgba(168,85,247,0)');
-    cx.fillStyle = g;
-    cx.beginPath(); cx.ellipse(m, m, 14, 18, 0, 0, Math.PI * 2); cx.fill();
-    cx.strokeStyle = '#d8b4fe'; cx.lineWidth = 2;
-    cx.beginPath(); cx.ellipse(m, m, 14, 18, 0, 0, Math.PI * 2); cx.stroke();
-  } else if (type === 'balloon') {
-    cx.fillStyle = '#f43f5e';
-    cx.beginPath(); cx.ellipse(m, m - 4, 10, 13, 0, 0, Math.PI * 2); cx.fill();
-    cx.strokeStyle = '#e11d48'; cx.lineWidth = 1.5;
-    cx.beginPath(); cx.ellipse(m, m - 4, 10, 13, 0, 0, Math.PI * 2); cx.stroke();
-    cx.fillStyle = 'rgba(255,255,255,.3)';
-    cx.beginPath(); cx.ellipse(m - 3, m - 8, 3, 5, -0.3, 0, Math.PI * 2); cx.fill();
-    cx.strokeStyle = '#888'; cx.lineWidth = 1;
-    cx.beginPath(); cx.moveTo(m, m + 9); cx.lineTo(m, m + 18); cx.stroke();
-  }
-}
-
-function selectTool(key) {
-  const def = LV.tools[key];
-  const remaining = def.count - (def._used || 0);
-  if (remaining <= 0) return;
-
-  if (key === 'portal') {
-    if (placingPortalStep === 0) {
-      placingPortalStep = 1;
-      selectedTool = 'portal';
-      showTut('Нажми, чтобы поставить ВХОД портала', 3);
-    }
-  } else {
-    selectedTool = key;
-    placingPortalStep = 0;
-  }
-
-  // Highlight
-  document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
-  const el = document.querySelector(`.tool[data-tool="${key}"]`);
-  if (el) el.classList.add('active');
-}
-
-function updateToolCounts() {
-  for (const key in LV.tools) {
-    const def = LV.tools[key];
-    const remaining = def.count - (def._used || 0);
-    const el = document.getElementById('cnt-' + key);
-    if (el) el.textContent = remaining;
-  }
-}
-
-// ── PLACEMENT ──
-function placeItem(wx, wy) {
-  if (!selectedTool) return;
-  const def = LV.tools[selectedTool];
-  const remaining = def.count - (def._used || 0);
-  if (remaining <= 0) { selectedTool = null; return; }
-
-  // Bounds check
-  if (wx < 5 || wx > WW - 5 || wy < 5 || wy > WH - 5) return;
-
-  if (selectedTool === 'portal') {
-    const item = new PlacedItem('portal', wx, wy, 0);
-    if (placingPortalStep === 1) {
-      item.portalSide = 'A';
-      portalA = item;
-      placedItems.push(item);
-      placingPortalStep = 2;
-      showTut('Теперь поставь ВЫХОД портала', 3);
-      return;
-    } else if (placingPortalStep === 2) {
-      item.portalSide = 'B';
-      portalB = item;
-      placedItems.push(item);
-      placingPortalStep = 0;
-      def._used = (def._used || 0) + 1;
-      selectedTool = null;
-      document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
-      showTut('Портал установлен!', 2);
-    }
-  } else if (selectedTool === 'balloon') {
-    // Balloon attaches to nearest squirrel within 40 units
-    let nearest = null, minD = 40;
-    for (const sq of squirrels) {
-      if (!sq.alive || sq.saved) continue;
-      const d = dist(wx, wy, sq.x, sq.y);
-      if (d < minD) { minD = d; nearest = sq; }
-    }
-    if (nearest) {
-      const item = new PlacedItem('balloon', nearest.x, nearest.y - nearest.r - 15, 0);
-      nearest.balloon = item;
-      placedItems.push(item);
-      def._used = (def._used || 0) + 1;
-      selectedTool = null;
-      document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
-    } else {
-      showTut('Шарик можно привязать только рядом с белкой!', 2);
-    }
-  } else {
-    const item = new PlacedItem(selectedTool, wx, wy, ghostAngle);
-    placedItems.push(item);
-    def._used = (def._used || 0) + 1;
-    if (def.count - def._used <= 0) {
-      selectedTool = null;
-      document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
-    }
-  }
-  updateToolCounts();
-}
-
-function removeItem(wx, wy) {
-  for (let i = placedItems.length - 1; i >= 0; i--) {
-    const it = placedItems[i];
-    const hw = it.w / 2, hh = it.h / 2;
-    // Simple AABB check (ignoring rotation for removal simplicity)
-    if (wx > it.x - hw - 10 && wx < it.x + hw + 10 && wy > it.y - hh - 10 && wy < it.y + hh + 10) {
-      // Refund
-      const def = LV.tools[it.type];
-      def._used = Math.max(0, (def._used || 0) - 1);
-      if (it.isPortal) {
-        if (it.portalSide === 'A') portalA = null;
-        if (it.portalSide === 'B') portalB = null;
-        // If removing one portal, remove pair
-        if (portalA && !portalB || !portalA && portalB) {
-          const other = portalA || portalB;
-          placedItems = placedItems.filter(p => p !== other);
-          portalA = null; portalB = null;
-          placingPortalStep = 0;
-        }
-      }
-      placedItems.splice(i, 1);
-      updateToolCounts();
-      return;
-    }
-  }
-}
-
-// ── TUTORIAL ──
-function showTut(text, sec) {
-  tutText = text; tutTimer = sec;
-  const el = document.getElementById('tut');
-  el.textContent = text;
-  el.classList.remove('hide');
-}
-
-// ── HUD UPDATE ──
-function updateHUD() {
-  const total = LV.totalSquirrels;
-  const active = squirrels.filter(s => s.alive && !s.saved).length;
-  document.getElementById('h-sq').textContent = `${savedCount}/${LV.needToWin} (${lostCount} lost)`;
-  document.getElementById('h-combo').textContent = `x${combo + 1}`;
-  const sec = Math.floor(time);
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  document.getElementById('h-time').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
-}
-
-// ── PHYSICS: AABB vs circle (rotated rect) ──
-function rectCircleCollision(sq, item) {
-  // Transform circle center into rect's local space
-  const cos = Math.cos(-item.angle);
-  const sin = Math.sin(-item.angle);
-  const dx = sq.x - item.x;
-  const dy = sq.y - item.y;
-  const localX = dx * cos - dy * sin;
-  const localY = dx * sin + dy * cos;
-
-  const hw = item.w / 2, hh = item.h / 2;
-  const closestX = clamp(localX, -hw, hw);
-  const closestY = clamp(localY, -hh, hh);
-
-  const distX = localX - closestX;
-  const distY = localY - closestY;
-  const d = Math.sqrt(distX * distX + distY * distY);
-
-  if (d < sq.r) {
-    const overlap = sq.r - d;
-    let nx, ny;
-    if (d === 0) { nx = 0; ny = -1; }
-    else { nx = distX / d; ny = distY / d; }
-
-    // Transform normal back to world space
-    const cos2 = Math.cos(item.angle);
-    const sin2 = Math.sin(item.angle);
-    const wnx = nx * cos2 - ny * sin2;
-    const wny = nx * sin2 + ny * cos2;
-
-    return { overlap, nx: wnx, ny: wny };
-  }
-  return null;
-}
-
-// ── MAIN PHYSICS UPDATE ──
-function updatePhysics(dt) {
-  // Wave spawning
-  if (wavesSpawned * LV.wavePairs < LV.totalSquirrels) {
-    waveTimer += dt;
-    if (waveTimer >= LV.waveDelay) {
-      spawnWave();
-    }
-  }
-
-  // Nut physics (if not carried)
-  if (nutObj && !nutObj.carried) {
-    nutObj.vy += GRAV;
-    nutObj.x += nutObj.vx * dt * 60;
-    nutObj.y += nutObj.vy * dt * 60;
-    nutObj.vx *= FRICTION;
-
-    // Nut vs platforms
-    for (const p of LV.platforms) {
-      const col = rectCircleCollision(nutObj, { x: p.x + p.w / 2, y: p.y + p.h / 2, w: p.w, h: p.h, angle: 0 });
-      if (col) {
-        nutObj.x += col.nx * col.overlap;
-        nutObj.y += col.ny * col.overlap;
-        if (col.ny < -0.5) { nutObj.vy = 0; nutObj.grounded = true; }
-        else { nutObj.vy *= -BOUNCE; }
-      }
-    }
-
-    // Nut vs placed items
-    for (const it of placedItems) {
-      if (it.type === 'portal' || it.type === 'balloon') continue;
-      const col = rectCircleCollision(nutObj, it);
-      if (col) {
-        nutObj.x += col.nx * col.overlap;
-        nutObj.y += col.ny * col.overlap;
-        if (col.ny < -0.5) { nutObj.vy = 0; nutObj.grounded = true; }
-      }
-    }
-
-    // World bounds
-    if (nutObj.y > WH + 50) {
-      // Nut fell — respawn
-      nutObj.x = LV.nut.x; nutObj.y = LV.nut.y;
-      nutObj.vx = 0; nutObj.vy = 0;
-    }
-  }
-
-  // Squirrels
-  for (const sq of squirrels) {
-    if (!sq.alive || sq.saved) continue;
-
-    // Delay
-    if (sq.delay > 0) { sq.delay -= dt; continue; }
-
-    // Gravity
-    sq.vy += GRAV;
-
-    // Balloon lift
-    if (sq.balloon) {
-      sq.vy -= 0.6; // upward force
-      sq.balloon.x = sq.x;
-      sq.balloon.y = sq.y - sq.r - 15;
-      sq.balloon.age += dt;
-      if (sq.balloon.age > 6) {
-        // Pop after 6 sec
-        spawnParticles(sq.balloon.x, sq.balloon.y, '#f43f5e', 8);
-        placedItems = placedItems.filter(p => p !== sq.balloon);
-        sq.balloon = null;
-      }
-    }
-
-    // AI movement — squirrels run towards nut if no nut, or towards goal if has nut
-    let targetX;
-    if (!sq.hasNut && nutObj && !nutObj.carried) {
-      targetX = nutObj.x;
-    } else if (sq.hasNut) {
-      targetX = LV.goal.x;
-    } else {
-      targetX = sq.x; // wait
-    }
-
-    if (Math.abs(targetX - sq.x) > 3) {
-      sq.dir = targetX > sq.x ? 1 : -1;
-      sq.vx = sq.dir * 1.8;
-    } else {
-      sq.vx *= 0.9;
-    }
-
-    // If grounded and there's an obstacle ahead, try to jump
-    if (sq.grounded) {
-      // Check if there's a wall or gap ahead
-      const aheadX = sq.x + sq.dir * 20;
-      let groundAhead = false;
-      for (const p of LV.platforms) {
-        if (aheadX > p.x && aheadX < p.x + p.w && sq.y + sq.r + 5 > p.y && sq.y < p.y + p.h + 20) {
-          groundAhead = true;
-        }
-      }
-      for (const it of placedItems) {
-        if (it.type === 'portal' || it.type === 'balloon') continue;
-        const hw = it.w / 2;
-        if (aheadX > it.x - hw && aheadX < it.x + hw && sq.y + sq.r + 5 > it.y - it.h / 2) {
-          groundAhead = true;
-        }
-      }
-      // Auto-jump if wall detected or gap
-      if (!groundAhead || sq.vx !== 0 && Math.abs(sq.vx) < 0.5) {
-        sq.vy = -5.5;
-        sq.grounded = false;
-      }
-    }
-
-    // Apply velocity
-    sq.x += sq.vx * dt * 60;
-    sq.y += sq.vy * dt * 60;
-    sq.vx *= FRICTION;
-    sq.grounded = false;
-
-    // Collision with platforms
-    for (const p of LV.platforms) {
-      const col = rectCircleCollision(sq, { x: p.x + p.w / 2, y: p.y + p.h / 2, w: p.w, h: p.h, angle: 0 });
-      if (col) {
-        sq.x += col.nx * col.overlap;
-        sq.y += col.ny * col.overlap;
-        if (col.ny < -0.5) {
-          sq.vy = 0;
-          sq.grounded = true;
-        } else if (Math.abs(col.nx) > 0.5) {
-          sq.vx = 0;
-        }
-      }
-    }
-
-    // Collision with placed items
-    for (const it of placedItems) {
-      if (it.type === 'balloon') continue;
-
-      // Portal check
-      if (it.isPortal && portalA && portalB) {
-        const d = dist(sq.x, sq.y, it.x, it.y);
-        if (d < 18) {
-          const other = (it === portalA) ? portalB : portalA;
-          sq.x = other.x;
-          sq.y = other.y - sq.r - 5;
-          // Keep velocity direction
-          spawnParticles(it.x, it.y, '#c084fc', 6);
-          spawnParticles(other.x, other.y, '#c084fc', 6);
-          continue;
-        }
-      }
-
-      if (it.type === 'portal') continue;
-
-      const col = rectCircleCollision(sq, it);
-      if (col) {
-        if (it.type === 'trampoline' && col.ny < -0.3) {
-          sq.vy = TRAMP_BOUNCE;
-          sq.grounded = false;
-          spawnParticles(sq.x, sq.y + sq.r, '#4488ff', 4);
-        } else {
-          sq.x += col.nx * col.overlap;
-          sq.y += col.ny * col.overlap;
-          if (col.ny < -0.5) {
-            sq.vy = 0;
-            sq.grounded = true;
-            // Durability
-            it.durability -= dt * 2;
-            if (it.durability <= 0) {
-              spawnParticles(it.x, it.y, it.color, 10);
-              placedItems = placedItems.filter(p => p !== it);
-            }
-          } else if (Math.abs(col.nx) > 0.5) {
-            sq.vx = 0;
-          }
-        }
-      }
-    }
-
-    // Nut pickup
-    if (!sq.hasNut && nutObj && !nutObj.carried) {
-      if (dist(sq.x, sq.y, nutObj.x, nutObj.y) < sq.r + nutObj.r) {
-        sq.hasNut = true;
-        nutObj.carried = true;
-        nutObj.carrier = sq;
-      }
-    }
-
-    // Nut follow carrier
-    if (sq.hasNut && nutObj) {
-      nutObj.x = sq.x;
-      nutObj.y = sq.y - sq.r - nutObj.r;
-    }
-
-    // Goal check
-    if (sq.hasNut && dist(sq.x, sq.y, LV.goal.x, LV.goal.y) < 25) {
-      sq.saved = true;
-      sq.hasNut = false;
-      savedCount++;
-      combo++;
-      if (combo > maxCombo) maxCombo = combo;
-      spawnParticles(LV.goal.x, LV.goal.y, '#ffd700', 15);
-
-      // Nut respawn for next squirrel
-      nutObj.carried = false;
-      nutObj.carrier = null;
-      nutObj.x = LV.nut.x;
-      nutObj.y = LV.nut.y;
-      nutObj.vx = 0; nutObj.vy = 0;
-    }
-
-    // Hazard check
-    for (const hz of LV.hazards) {
-      if (sq.x > hz.x && sq.x < hz.x + hz.w && sq.y + sq.r > hz.y && sq.y < hz.y + hz.h) {
-        sq.alive = false;
-        lostCount++;
-        combo = 0;
-        spawnParticles(sq.x, sq.y, '#ff4444', 12);
-
-        // Drop nut
-        if (sq.hasNut && nutObj) {
-          nutObj.carried = false;
-          nutObj.carrier = null;
-          nutObj.x = LV.nut.x; nutObj.y = LV.nut.y;
-          nutObj.vx = 0; nutObj.vy = 0;
-        }
-      }
-    }
-
-    // Fall off world
-    if (sq.y > WH + 30) {
-      sq.alive = false;
-      lostCount++;
-      combo = 0;
-      if (sq.hasNut && nutObj) {
-        nutObj.carried = false; nutObj.carrier = null;
-        nutObj.x = LV.nut.x; nutObj.y = LV.nut.y;
-        nutObj.vx = 0; nutObj.vy = 0;
-      }
-    }
-
-    // Wall bounds
-    sq.x = clamp(sq.x, sq.r, WW - sq.r);
-
-    // Animation
-    if (sq.grounded && Math.abs(sq.vx) > 0.3) {
-      sq.runFrame += dt * 10;
-    }
-    sq.blinkT -= dt;
-    if (sq.blinkT <= 0) { sq.blinking = !sq.blinking; sq.blinkT = sq.blinking ? 0.15 : rand(2, 5); }
-    sq.breathT += dt * 2;
-    sq.tailPhase += dt * 3;
-  }
-
-  // Win/lose check
-  const allDone = squirrels.every(s => !s.alive || s.saved || s.delay > 0 === false);
-  const activeCount = squirrels.filter(s => s.alive && !s.saved).length;
-  const pendingWaves = wavesSpawned * LV.wavePairs < LV.totalSquirrels;
-
-  if (!pendingWaves && activeCount === 0) {
-    if (savedCount >= LV.needToWin) {
-      phase = 'win';
-      showWin();
-    } else {
-      phase = 'lose';
-      showLose();
-    }
-  }
-
-  // Also lose if impossible to win
-  if (lostCount > LV.totalSquirrels - LV.needToWin && !pendingWaves && activeCount === 0) {
-    phase = 'lose';
-    showLose();
-  }
-
-  // Particles
-  for (const p of particles) {
-    p.vy += 0.15;
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life -= dt;
-  }
-  particles = particles.filter(p => p.life > 0);
-}
-
-function spawnParticles(wx, wy, color, n) {
-  for (let i = 0; i < n; i++) {
-    particles.push(new Particle(wx, wy, rand(-3, 3), rand(-4, 1), color, rand(0.5, 1.5)));
-  }
-}
-
-// ── RENDERING ──
+// ── RENDER ──
 function render() {
   X.setTransform(DPR, 0, 0, DPR, 0, 0);
-  X.clearRect(0, 0, W, H);
 
-  // Background
-  if (bgReady) {
-    X.drawImage(bgCanvas, 0, 0, W, H);
+  // ── SKY ──
+  const sky = X.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#0a1628');
+  sky.addColorStop(0.35, '#162a50');
+  sky.addColorStop(0.65, '#1a3a5c');
+  sky.addColorStop(1, '#0d2818');
+  X.fillStyle = sky;
+  X.fillRect(0, 0, W, H);
+
+  // ── STARS ──
+  for (let i = 0; i < 40; i++) {
+    // Deterministic pseudo-random from index
+    const px = ((i * 7919 + 1) % 997) / 997;
+    const py = ((i * 6271 + 3) % 991) / 991 * 0.4;
+    const br = 0.3 + Math.sin(frame * 0.02 + i * 2.1) * 0.25;
+    X.fillStyle = `rgba(255,255,240,${clamp(br, 0.1, 0.8)})`;
+    X.beginPath();
+    X.arc(px * W, py * H, 1 + (i % 3) * 0.4, 0, Math.PI * 2);
+    X.fill();
   }
 
-  // Twinkling stars
-  for (const s of starField) {
-    const b = s.b + Math.sin(frameCount * s.sp) * 0.3;
-    const [sx, sy] = [s.x, s.y];
-    X.fillStyle = `rgba(255,255,240,${clamp(b, 0.1, 1)})`;
-    X.beginPath(); X.arc(sx, sy, s.r, 0, Math.PI * 2); X.fill();
+  // ── MOON ──
+  const mx = W * 0.82, my = H * 0.08;
+  const mg = X.createRadialGradient(mx, my, 0, mx, my, 40);
+  mg.addColorStop(0, 'rgba(255,250,220,.85)');
+  mg.addColorStop(0.4, 'rgba(255,240,200,.2)');
+  mg.addColorStop(1, 'rgba(255,240,200,0)');
+  X.fillStyle = mg;
+  X.beginPath(); X.arc(mx, my, 40, 0, Math.PI * 2); X.fill();
+  X.fillStyle = '#fdfbe8';
+  X.beginPath(); X.arc(mx, my, 14, 0, Math.PI * 2); X.fill();
+
+  // ── DISTANT HILLS ──
+  X.fillStyle = '#0d2a14';
+  X.beginPath();
+  X.moveTo(0, H * 0.75);
+  for (let i = 0; i <= W; i += 20) {
+    X.lineTo(i, H * 0.72 + Math.sin(i * 0.008 + 1) * 18 + Math.sin(i * 0.02) * 6);
   }
+  X.lineTo(W, H); X.lineTo(0, H);
+  X.fill();
 
-  // Save and translate to world space
-  X.save();
-  X.translate(OX, OY);
-  X.scale(SC, SC);
-
-  // ── PLATFORMS ──
-  for (const p of LV.platforms) {
-    drawPlatform(p);
+  // ── GROUND ──
+  const gg = X.createLinearGradient(0, H * 0.85, 0, H);
+  gg.addColorStop(0, '#1a4d28');
+  gg.addColorStop(0.5, '#153d20');
+  gg.addColorStop(1, '#0d2818');
+  X.fillStyle = gg;
+  X.beginPath();
+  X.moveTo(0, H * 0.87);
+  for (let i = 0; i <= W; i += 15) {
+    X.lineTo(i, H * 0.87 + Math.sin(i * 0.015 + 0.5) * 4);
   }
+  X.lineTo(W, H); X.lineTo(0, H); X.fill();
 
-  // ── HAZARDS ──
-  for (const hz of LV.hazards) {
-    drawHazard(hz);
+  // Ground grass line
+  X.strokeStyle = '#2a7a3a';
+  X.lineWidth = 2;
+  X.beginPath();
+  for (let i = 0; i <= W; i += 3) {
+    const gy = H * 0.87 + Math.sin(i * 0.015 + 0.5) * 4;
+    if (i === 0) X.moveTo(i, gy); else X.lineTo(i, gy);
   }
+  X.stroke();
 
-  // ── PLACED ITEMS ──
-  for (const it of placedItems) {
-    drawPlacedItem(it);
-  }
-
-  // ── GHOST (preview) ──
-  if (selectedTool && ghostPos && selectedTool !== 'portal') {
-    X.globalAlpha = 0.4;
-    const def = LV.tools[selectedTool];
-    X.save();
-    X.translate(ghostPos[0], ghostPos[1]);
-    X.rotate(ghostAngle);
-    X.fillStyle = def.color;
-    X.fillRect(-def.w / 2, -def.h / 2, def.w, def.h);
-    X.restore();
-    X.globalAlpha = 1;
-  }
-
-  // ── NUT ──
-  if (nutObj && !nutObj.carried) {
-    drawNut(nutObj.x, nutObj.y);
-  }
-
-  // ── GOAL (дупло) ──
-  drawGoal(LV.goal.x, LV.goal.y);
+  // ── TREE ──
+  drawTree();
 
   // ── SQUIRRELS ──
-  for (const sq of squirrels) {
-    if (!sq.alive || sq.saved || sq.delay > 0) continue;
+  for (const sq of squirrelSlots) {
     drawSquirrel(sq);
-    // Nut on head
-    if (sq.hasNut && nutObj) {
-      drawNut(nutObj.x, nutObj.y);
-    }
   }
 
-  // ── PARTICLES ──
-  for (const p of particles) {
-    const alpha = p.life / p.maxLife;
-    X.fillStyle = p.color;
-    X.globalAlpha = alpha;
+  // ── FIREFLIES ──
+  for (const p of bgParticles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0 || p.x > 1) p.vx *= -1;
+    if (p.y < 0 || p.y > 1) p.vy *= -1;
+    const b = 0.4 + Math.sin(frame * p.speed + p.phase) * 0.4;
+    const glow = X.createRadialGradient(p.x * W, p.y * H, 0, p.x * W, p.y * H, p.r * 6);
+    glow.addColorStop(0, `rgba(${p.color},${b})`);
+    glow.addColorStop(1, `rgba(${p.color},0)`);
+    X.fillStyle = glow;
+    X.beginPath(); X.arc(p.x * W, p.y * H, p.r * 6, 0, Math.PI * 2); X.fill();
+    X.fillStyle = `rgba(${p.color},${Math.min(1, b + 0.3)})`;
+    X.beginPath(); X.arc(p.x * W, p.y * H, p.r, 0, Math.PI * 2); X.fill();
+  }
+
+  // ── FALLING LEAVES ──
+  for (let i = fallingLeaves.length - 1; i >= 0; i--) {
+    const lf = fallingLeaves[i];
+    lf.x += lf.vx;
+    lf.y += lf.vy;
+    lf.rot += lf.vr;
+    lf.life -= 0.012;
+    if (lf.life <= 0) { fallingLeaves.splice(i, 1); continue; }
+    lf.vx += Math.sin(frame * 0.03 + lf.phase) * 0.02;
+    X.save();
+    X.translate(lf.x, lf.y);
+    X.rotate(lf.rot);
+    X.globalAlpha = clamp(lf.life, 0, 1);
+    X.fillStyle = lf.color;
     X.beginPath();
-    X.arc(p.x, p.y, p.r * alpha, 0, Math.PI * 2);
+    X.ellipse(0, 0, 4, 2.5, 0, 0, Math.PI * 2);
+    X.fill();
+    X.globalAlpha = 1;
+    X.restore();
+  }
+
+  // ── CLICK PARTICLES ──
+  for (let i = clickParticles.length - 1; i >= 0; i--) {
+    const cp = clickParticles[i];
+    cp.x += cp.vx;
+    cp.y += cp.vy;
+    cp.vy += 0.08;
+    cp.life -= 0.025;
+    if (cp.life <= 0) { clickParticles.splice(i, 1); continue; }
+    X.globalAlpha = clamp(cp.life, 0, 1);
+    X.fillStyle = cp.color;
+    X.beginPath(); X.arc(cp.x, cp.y, cp.r * cp.life, 0, Math.PI * 2); X.fill();
+    X.globalAlpha = 1;
+  }
+}
+
+function drawTree() {
+  const cx = W * 0.5;
+  const baseY = H * 0.88;
+  const topY = baseY - treeHeight * H;
+  const trunkW = 12 + treeLevel * 3;
+
+  // ── TRUNK ──
+  const tg = X.createLinearGradient(cx - trunkW, baseY, cx + trunkW, topY);
+  tg.addColorStop(0, '#3d2510');
+  tg.addColorStop(0.5, '#5a3a1a');
+  tg.addColorStop(1, '#4a2e14');
+  X.fillStyle = tg;
+
+  X.beginPath();
+  X.moveTo(cx - trunkW, baseY);
+  X.quadraticCurveTo(cx - trunkW - 2, lerp(baseY, topY, 0.5), cx - trunkW * 0.4, topY + 20);
+  X.lineTo(cx + trunkW * 0.4, topY + 20);
+  X.quadraticCurveTo(cx + trunkW + 2, lerp(baseY, topY, 0.5), cx + trunkW, baseY);
+  X.closePath();
+  X.fill();
+
+  // Bark texture
+  X.strokeStyle = 'rgba(30,15,5,.3)';
+  X.lineWidth = 1;
+  for (let i = 0; i < 6 + treeLevel * 2; i++) {
+    const t = rand(0.05, 0.9);
+    const by = lerp(baseY, topY + 25, t);
+    const bw = trunkW * lerp(1, 0.4, t);
+    X.beginPath();
+    X.moveTo(cx - bw * rand(0.2, 0.8), by);
+    X.quadraticCurveTo(cx, by + rand(-5, 5), cx + bw * rand(0.2, 0.8), by + rand(-3, 3));
+    X.stroke();
+  }
+
+  // ── ДУПЛО ──
+  const duploY = lerp(baseY, topY, 0.3);
+  const duploR = 8 + treeLevel;
+  const dg = X.createRadialGradient(cx, duploY, 0, cx, duploY, duploR);
+  dg.addColorStop(0, '#0a0500');
+  dg.addColorStop(0.7, '#1a0e05');
+  dg.addColorStop(1, '#3d2510');
+  X.fillStyle = dg;
+  X.beginPath(); X.ellipse(cx, duploY, duploR, duploR * 1.2, 0, 0, Math.PI * 2); X.fill();
+  X.strokeStyle = '#6B4226';
+  X.lineWidth = 1.5;
+  X.beginPath(); X.ellipse(cx, duploY, duploR, duploR * 1.2, 0, 0, Math.PI * 2); X.stroke();
+
+  // ── BRANCHES ──
+  for (const br of branches) {
+    const by = br.y * H;
+    const sway = Math.sin(frame * 0.015 + br.sway) * 3;
+    const bx = cx + br.side * trunkW * lerp(1, 0.4, (br.y * H - topY) / (baseY - topY));
+    const endX = bx + br.side * br.len * W + sway;
+    const endY = by - rand(5, 15);
+
+    // Branch wood
+    X.strokeStyle = '#5a3a1a';
+    X.lineWidth = 3 + treeLevel * 0.5;
+    X.lineCap = 'round';
+    X.beginPath();
+    X.moveTo(bx, by);
+    X.quadraticCurveTo(bx + br.side * br.len * W * 0.5 + sway * 0.5, by - 10, endX, endY);
+    X.stroke();
+
+    // Leaf cluster at end of branch
+    drawLeafCluster(endX, endY, 16 + treeLevel * 3);
+  }
+
+  // ── CROWN (top) ──
+  drawLeafCluster(cx, topY + 15, 30 + treeLevel * 8);
+  drawLeafCluster(cx - 20, topY + 25, 20 + treeLevel * 4);
+  drawLeafCluster(cx + 20, topY + 25, 20 + treeLevel * 4);
+}
+
+function drawLeafCluster(x, y, r) {
+  // Multiple layered circles for organic look
+  const colors = ['#2d8a3e', '#38a84a', '#45c458', '#2e7d32'];
+  for (let i = 0; i < 4; i++) {
+    const ox = Math.sin(i * 1.8 + frame * 0.008) * r * 0.2;
+    const oy = Math.cos(i * 2.3 + frame * 0.006) * r * 0.15;
+    const cr = r * rand(0.5, 0.8);
+    X.fillStyle = colors[i % colors.length];
+    X.globalAlpha = 0.7;
+    X.beginPath();
+    X.arc(x + ox, y + oy, cr, 0, Math.PI * 2);
     X.fill();
   }
   X.globalAlpha = 1;
 
-  X.restore();
-}
-
-function drawPlatform(p) {
-  // Main body
-  const g = X.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
-  g.addColorStop(0, '#5a8f3c');
-  g.addColorStop(0.3, '#4a7a2e');
-  g.addColorStop(1, '#3a5e22');
-  X.fillStyle = g;
-  X.beginPath();
-  const cr = 4;
-  X.moveTo(p.x + cr, p.y);
-  X.lineTo(p.x + p.w - cr, p.y);
-  X.quadraticCurveTo(p.x + p.w, p.y, p.x + p.w, p.y + cr);
-  X.lineTo(p.x + p.w, p.y + p.h);
-  X.lineTo(p.x, p.y + p.h);
-  X.lineTo(p.x, p.y + cr);
-  X.quadraticCurveTo(p.x, p.y, p.x + cr, p.y);
-  X.closePath();
-  X.fill();
-
-  // Grass on top
-  X.fillStyle = '#6abf3a';
-  X.fillRect(p.x, p.y, p.w, 3);
-
-  // Grass blades
-  X.strokeStyle = '#7dd44a';
-  X.lineWidth = 1.2;
-  for (let i = 0; i < p.w; i += 6) {
-    const bx = p.x + i + rand(-1, 1);
-    const bh = rand(3, 7);
-    const sway = Math.sin(frameCount * 0.03 + i * 0.5) * 2;
-    X.beginPath();
-    X.moveTo(bx, p.y);
-    X.quadraticCurveTo(bx + sway, p.y - bh * 0.6, bx + sway * 0.5, p.y - bh);
-    X.stroke();
-  }
-
-  // Subtle edge highlight
-  X.strokeStyle = 'rgba(255,255,255,.1)';
-  X.lineWidth = 0.5;
-  X.strokeRect(p.x, p.y, p.w, p.h);
-}
-
-function drawHazard(hz) {
-  if (hz.type === 'spike') {
-    const n = Math.floor(hz.w / 10);
-    X.fillStyle = '#c0392b';
-    for (let i = 0; i < n; i++) {
-      const bx = hz.x + i * (hz.w / n);
-      const tw = hz.w / n;
-      X.beginPath();
-      X.moveTo(bx, hz.y + hz.h);
-      X.lineTo(bx + tw / 2, hz.y);
-      X.lineTo(bx + tw, hz.y + hz.h);
-      X.closePath();
-      X.fill();
-    }
-    // Glow
-    X.fillStyle = 'rgba(231,76,60,.15)';
-    X.fillRect(hz.x - 4, hz.y - 4, hz.w + 8, hz.h + 8);
-  } else if (hz.type === 'water') {
-    // Water body
-    const wg = X.createLinearGradient(hz.x, hz.y, hz.x, hz.y + hz.h);
-    wg.addColorStop(0, 'rgba(41,128,185,.7)');
-    wg.addColorStop(1, 'rgba(23,70,120,.9)');
-    X.fillStyle = wg;
-    X.fillRect(hz.x, hz.y, hz.w, hz.h);
-
-    // Waves
-    X.strokeStyle = 'rgba(200,230,255,.5)';
-    X.lineWidth = 1.5;
-    X.beginPath();
-    for (let i = 0; i <= hz.w; i += 2) {
-      const wx = hz.x + i;
-      const wy = hz.y + Math.sin(frameCount * 0.05 + i * 0.2) * 2;
-      if (i === 0) X.moveTo(wx, wy); else X.lineTo(wx, wy);
-    }
-    X.stroke();
-  }
-}
-
-function drawPlacedItem(it) {
-  X.save();
-  X.translate(it.x, it.y);
-  X.rotate(it.angle);
-
-  const hw = it.w / 2, hh = it.h / 2;
-
-  if (it.type === 'plank') {
-    // Wood plank
-    const durRatio = it.durability / it.maxDur;
-    X.fillStyle = durRatio > 0.5 ? '#b8834a' : '#8B6914';
-    X.fillRect(-hw, -hh, it.w, it.h);
-    // Wood grain
-    X.strokeStyle = 'rgba(80,50,10,.3)';
-    X.lineWidth = 0.5;
-    for (let i = -hw + 5; i < hw; i += 8) {
-      X.beginPath(); X.moveTo(i, -hh); X.lineTo(i + 3, hh); X.stroke();
-    }
-    // Damage cracks
-    if (durRatio < 0.5) {
-      X.strokeStyle = 'rgba(0,0,0,.4)';
-      X.lineWidth = 1;
-      X.beginPath(); X.moveTo(-5, -hh); X.lineTo(3, hh); X.stroke();
-      X.beginPath(); X.moveTo(10, -hh); X.lineTo(15, 0); X.stroke();
-    }
-    X.strokeStyle = 'rgba(100,60,10,.5)';
-    X.lineWidth = 0.8;
-    X.strokeRect(-hw, -hh, it.w, it.h);
-  } else if (it.type === 'box') {
-    X.fillStyle = '#8B7355';
-    X.fillRect(-hw, -hh, it.w, it.h);
-    X.strokeStyle = '#6B5335';
-    X.lineWidth = 1.2;
-    X.strokeRect(-hw, -hh, it.w, it.h);
-    // Cross
-    X.beginPath(); X.moveTo(0, -hh); X.lineTo(0, hh); X.stroke();
-    X.beginPath(); X.moveTo(-hw, 0); X.lineTo(hw, 0); X.stroke();
-    // Nails
-    X.fillStyle = '#aaa';
-    X.beginPath(); X.arc(-hw + 3, -hh + 3, 1.5, 0, Math.PI * 2); X.fill();
-    X.beginPath(); X.arc(hw - 3, -hh + 3, 1.5, 0, Math.PI * 2); X.fill();
-    X.beginPath(); X.arc(-hw + 3, hh - 3, 1.5, 0, Math.PI * 2); X.fill();
-    X.beginPath(); X.arc(hw - 3, hh - 3, 1.5, 0, Math.PI * 2); X.fill();
-  } else if (it.type === 'trampoline') {
-    // Legs
-    X.fillStyle = '#555';
-    X.fillRect(-hw + 2, 0, 3, hh + 4);
-    X.fillRect(hw - 5, 0, 3, hh + 4);
-    // Surface
-    const tg = X.createLinearGradient(-hw, -hh, hw, -hh);
-    tg.addColorStop(0, '#3377ee');
-    tg.addColorStop(0.5, '#55aaff');
-    tg.addColorStop(1, '#3377ee');
-    X.fillStyle = tg;
-    X.fillRect(-hw, -hh, it.w, it.h * 0.6);
-    // Bounce arc
-    X.strokeStyle = '#88ccff';
-    X.lineWidth = 1.5;
-    X.beginPath();
-    X.moveTo(-hw, -hh);
-    X.quadraticCurveTo(0, -hh - 4 - Math.sin(frameCount * 0.1) * 2, hw, -hh);
-    X.stroke();
-  } else if (it.type === 'portal') {
-    const isA = it.portalSide === 'A';
-    const col = isA ? '#a855f7' : '#38bdf8';
-    // Glow
-    const pg = X.createRadialGradient(0, 0, 0, 0, 0, 20);
-    pg.addColorStop(0, col);
-    pg.addColorStop(0.5, col + '66');
-    pg.addColorStop(1, col + '00');
-    X.fillStyle = pg;
-    X.beginPath(); X.ellipse(0, 0, 14, 18, 0, 0, Math.PI * 2); X.fill();
-    // Ring
-    X.strokeStyle = col;
-    X.lineWidth = 2.5;
-    X.beginPath();
-    X.ellipse(0, 0, 10 + Math.sin(frameCount * 0.08) * 2, 15, 0, 0, Math.PI * 2);
-    X.stroke();
-    // Label
-    X.fillStyle = '#fff';
-    X.font = 'bold 10px sans-serif';
-    X.textAlign = 'center';
-    X.fillText(isA ? 'IN' : 'OUT', 0, 4);
-  } else if (it.type === 'balloon') {
-    // String
-    X.strokeStyle = '#888';
-    X.lineWidth = 0.8;
-    X.beginPath(); X.moveTo(0, hh); X.lineTo(0, hh + 15); X.stroke();
-    // Balloon body
-    const bg = X.createRadialGradient(-3, -4, 0, 0, 0, 12);
-    bg.addColorStop(0, '#ff6b7f');
-    bg.addColorStop(0.7, '#f43f5e');
-    bg.addColorStop(1, '#be123c');
-    X.fillStyle = bg;
-    X.beginPath(); X.ellipse(0, 0, 10, 13, 0, 0, Math.PI * 2); X.fill();
-    // Highlight
-    X.fillStyle = 'rgba(255,255,255,.35)';
-    X.beginPath(); X.ellipse(-3, -5, 3, 5, -0.3, 0, Math.PI * 2); X.fill();
-    // Knot
-    X.fillStyle = '#be123c';
-    X.beginPath(); X.moveTo(-2, hh); X.lineTo(2, hh); X.lineTo(0, hh + 3); X.closePath(); X.fill();
-  }
-
-  X.restore();
-}
-
-function drawNut(nx, ny) {
-  // Glow
-  const ng = X.createRadialGradient(nx, ny, 0, nx, ny, 16);
-  ng.addColorStop(0, 'rgba(255,200,0,.4)');
-  ng.addColorStop(1, 'rgba(255,200,0,0)');
-  X.fillStyle = ng;
-  X.beginPath(); X.arc(nx, ny, 16, 0, Math.PI * 2); X.fill();
-
-  // Shell
-  const sg = X.createRadialGradient(nx - 2, ny - 2, 0, nx, ny, 8);
-  sg.addColorStop(0, '#ffd700');
-  sg.addColorStop(0.7, '#daa520');
-  sg.addColorStop(1, '#b8860b');
-  X.fillStyle = sg;
-  X.beginPath(); X.arc(nx, ny, 7, 0, Math.PI * 2); X.fill();
-
-  // Cap
-  X.fillStyle = '#8B6914';
-  X.beginPath();
-  X.moveTo(nx - 6, ny - 3);
-  X.quadraticCurveTo(nx, ny - 10, nx + 6, ny - 3);
-  X.closePath();
-  X.fill();
-
   // Highlight
-  X.fillStyle = 'rgba(255,255,255,.3)';
-  X.beginPath(); X.arc(nx - 2, ny - 2, 2.5, 0, Math.PI * 2); X.fill();
-}
-
-function drawGoal(gx, gy) {
-  // Tree trunk
-  X.fillStyle = '#5a3a1a';
-  X.fillRect(gx - 8, gy - 30, 16, 50);
-
-  // Hole (дупло)
-  const hg = X.createRadialGradient(gx, gy, 0, gx, gy, 14);
-  hg.addColorStop(0, '#1a0a00');
-  hg.addColorStop(0.7, '#2a1a0a');
-  hg.addColorStop(1, '#4a2a10');
-  X.fillStyle = hg;
-  X.beginPath(); X.ellipse(gx, gy, 12, 14, 0, 0, Math.PI * 2); X.fill();
-
-  // Rim
-  X.strokeStyle = '#8B6914';
-  X.lineWidth = 2;
-  X.beginPath(); X.ellipse(gx, gy, 12, 14, 0, 0, Math.PI * 2); X.stroke();
-
-  // Pulsating glow
-  const pulse = 0.3 + Math.sin(frameCount * 0.05) * 0.15;
-  X.fillStyle = `rgba(255,200,0,${pulse})`;
-  X.beginPath(); X.ellipse(gx, gy, 8, 10, 0, 0, Math.PI * 2); X.fill();
-
-  // Label
-  X.fillStyle = '#fff';
-  X.font = 'bold 8px sans-serif';
-  X.textAlign = 'center';
-  X.fillText('ДУПЛО', gx, gy - 32);
+  X.fillStyle = 'rgba(120,255,120,.08)';
+  X.beginPath(); X.arc(x, y - r * 0.3, r * 0.6, 0, Math.PI * 2); X.fill();
 }
 
 function drawSquirrel(sq) {
-  const s = sq.r / 12; // scale factor
-  const breathScale = 1 + Math.sin(sq.breathT) * 0.02;
+  const bob = Math.sin(frame * 0.04 + sq.bobPhase) * 3;
+  const sx = sq.x + Math.sin(frame * 0.01 * sq.speed + sq.phase) * 15;
+  const sy = sq.baseY + bob;
+  const s = 8 * sq.size;
+  const d = sq.dir;
 
   X.save();
-  X.translate(sq.x, sq.y);
-  X.scale(sq.dir, 1);
-  X.scale(breathScale, breathScale);
+  X.translate(sx, sy);
+  X.scale(d, 1);
 
-  // ── TAIL ──
-  const tailSway = Math.sin(sq.tailPhase) * 8;
+  // Tail
+  const tailSway = Math.sin(frame * 0.04 + sq.phase) * 5;
   X.strokeStyle = '#d4790a';
-  X.lineWidth = 5 * s;
+  X.lineWidth = 3.5;
   X.lineCap = 'round';
   X.beginPath();
-  X.moveTo(-4 * s, -2 * s);
-  X.bezierCurveTo(
-    -12 * s, -8 * s + tailSway * 0.3,
-    -16 * s + tailSway * 0.5, -18 * s,
-    -10 * s + tailSway * 0.3, -22 * s
-  );
+  X.moveTo(-3, -1);
+  X.bezierCurveTo(-8, -5 + tailSway * 0.3, -12 + tailSway * 0.4, -14, -8 + tailSway * 0.2, -17);
   X.stroke();
-  // Tail highlight
   X.strokeStyle = '#f0a030';
-  X.lineWidth = 2.5 * s;
+  X.lineWidth = 1.8;
   X.beginPath();
-  X.moveTo(-5 * s, -4 * s);
-  X.bezierCurveTo(
-    -11 * s, -9 * s + tailSway * 0.3,
-    -14 * s + tailSway * 0.5, -17 * s,
-    -9 * s + tailSway * 0.3, -20 * s
-  );
+  X.moveTo(-3, -2);
+  X.bezierCurveTo(-7, -6 + tailSway * 0.3, -10 + tailSway * 0.4, -13, -7 + tailSway * 0.2, -15);
   X.stroke();
 
-  // ── BODY ──
-  const bg = X.createRadialGradient(-1 * s, 2 * s, 0, 0, 0, sq.r);
+  // Body
+  const bg = X.createRadialGradient(0, 1, 0, 0, 0, s);
   bg.addColorStop(0, '#e8940a');
-  bg.addColorStop(0.6, '#d4790a');
+  bg.addColorStop(0.7, '#d4790a');
   bg.addColorStop(1, '#b86208');
   X.fillStyle = bg;
-  X.beginPath();
-  X.ellipse(0, 2 * s, 9 * s, 10 * s, 0, 0, Math.PI * 2);
-  X.fill();
+  X.beginPath(); X.ellipse(0, 1, s * 0.7, s * 0.8, 0, 0, Math.PI * 2); X.fill();
 
   // Belly
   X.fillStyle = '#f5c76a';
-  X.beginPath();
-  X.ellipse(1 * s, 5 * s, 5 * s, 6 * s, 0, 0, Math.PI * 2);
-  X.fill();
+  X.beginPath(); X.ellipse(1, 3, s * 0.38, s * 0.45, 0, 0, Math.PI * 2); X.fill();
 
-  // ── LEGS ──
-  const legPhase = sq.grounded ? Math.sin(sq.runFrame) * 4 : 0;
-  X.fillStyle = '#b86208';
-  // Back leg
-  X.beginPath();
-  X.ellipse(-3 * s, 10 * s + legPhase * 0.3, 4 * s, 3 * s, 0.2, 0, Math.PI * 2);
-  X.fill();
-  // Front leg
-  X.beginPath();
-  X.ellipse(4 * s, 10 * s - legPhase * 0.3, 4 * s, 3 * s, -0.2, 0, Math.PI * 2);
-  X.fill();
+  // Head
+  X.fillStyle = '#e8940a';
+  X.beginPath(); X.ellipse(2, -5, s * 0.6, s * 0.55, 0, 0, Math.PI * 2); X.fill();
 
-  // Feet
-  X.fillStyle = '#8B5A00';
-  X.beginPath();
-  X.ellipse(-3 * s, 12 * s + legPhase * 0.3, 3 * s, 1.5 * s, 0, 0, Math.PI * 2);
-  X.fill();
-  X.beginPath();
-  X.ellipse(5 * s, 12 * s - legPhase * 0.3, 3 * s, 1.5 * s, 0, 0, Math.PI * 2);
-  X.fill();
-
-  // ── ARMS ──
+  // Ears
   X.fillStyle = '#d4790a';
-  const armAngle = sq.grounded ? Math.sin(sq.runFrame + 1) * 0.3 : -0.5;
-  // Back arm
-  X.save();
-  X.translate(-5 * s, 0);
-  X.rotate(armAngle);
-  X.beginPath();
-  X.ellipse(0, 5 * s, 2.5 * s, 5 * s, 0, 0, Math.PI * 2);
-  X.fill();
-  X.restore();
-  // Front arm
-  X.save();
-  X.translate(6 * s, 0);
-  X.rotate(-armAngle);
-  X.beginPath();
-  X.ellipse(0, 5 * s, 2.5 * s, 5 * s, 0, 0, Math.PI * 2);
-  X.fill();
-  X.restore();
-
-  // ── HEAD ──
-  const hg = X.createRadialGradient(2 * s, -8 * s, 0, 2 * s, -7 * s, 8 * s);
-  hg.addColorStop(0, '#f0a030');
-  hg.addColorStop(0.7, '#d4790a');
-  hg.addColorStop(1, '#b86208');
-  X.fillStyle = hg;
-  X.beginPath();
-  X.ellipse(2 * s, -7 * s, 8 * s, 7 * s, 0, 0, Math.PI * 2);
-  X.fill();
-
-  // Cheek
-  X.fillStyle = 'rgba(255,180,100,.3)';
-  X.beginPath(); X.arc(7 * s, -5 * s, 3 * s, 0, Math.PI * 2); X.fill();
-
-  // ── EARS ──
-  X.fillStyle = '#d4790a';
-  // Left ear
-  X.beginPath();
-  X.moveTo(-3 * s, -12 * s);
-  X.lineTo(-5 * s, -18 * s);
-  X.lineTo(0, -13 * s);
-  X.closePath();
-  X.fill();
-  // Right ear
-  X.beginPath();
-  X.moveTo(5 * s, -12 * s);
-  X.lineTo(7 * s, -18 * s);
-  X.lineTo(9 * s, -13 * s);
-  X.closePath();
-  X.fill();
-  // Inner ear
+  X.beginPath(); X.moveTo(-1, -9); X.lineTo(-3, -14); X.lineTo(1, -10); X.fill();
+  X.beginPath(); X.moveTo(4, -9); X.lineTo(5, -14); X.lineTo(7, -10); X.fill();
   X.fillStyle = '#f5c76a';
-  X.beginPath();
-  X.moveTo(-2 * s, -12.5 * s);
-  X.lineTo(-4 * s, -16.5 * s);
-  X.lineTo(0.5 * s, -13 * s);
-  X.closePath();
-  X.fill();
+  X.beginPath(); X.moveTo(0, -9.5); X.lineTo(-2, -12.5); X.lineTo(1.5, -10); X.fill();
 
-  // ── EYES ──
-  if (!sq.blinking) {
-    // Eye whites
-    X.fillStyle = '#fff';
-    X.beginPath(); X.ellipse(5 * s, -8 * s, 3 * s, 3.5 * s, 0, 0, Math.PI * 2); X.fill();
-    X.beginPath(); X.ellipse(-1 * s, -8 * s, 2.5 * s, 3 * s, 0, 0, Math.PI * 2); X.fill();
-    // Pupils
-    X.fillStyle = '#1a1a1a';
-    X.beginPath(); X.arc(5.5 * s, -7.5 * s, 1.8 * s, 0, Math.PI * 2); X.fill();
-    X.beginPath(); X.arc(-0.5 * s, -7.5 * s, 1.5 * s, 0, Math.PI * 2); X.fill();
-    // Catch light
-    X.fillStyle = '#fff';
-    X.beginPath(); X.arc(6 * s, -8.5 * s, 0.7 * s, 0, Math.PI * 2); X.fill();
-    X.beginPath(); X.arc(0 * s, -8.5 * s, 0.5 * s, 0, Math.PI * 2); X.fill();
-  } else {
-    // Blink lines
-    X.strokeStyle = '#1a1a1a';
-    X.lineWidth = 1 * s;
-    X.beginPath(); X.moveTo(3 * s, -8 * s); X.lineTo(7 * s, -8 * s); X.stroke();
-    X.beginPath(); X.moveTo(-3 * s, -8 * s); X.lineTo(1 * s, -8 * s); X.stroke();
-  }
+  // Eyes
+  X.fillStyle = '#fff';
+  X.beginPath(); X.ellipse(4, -6, 2.2, 2.5, 0, 0, Math.PI * 2); X.fill();
+  X.beginPath(); X.ellipse(0, -6, 1.8, 2.2, 0, 0, Math.PI * 2); X.fill();
+  X.fillStyle = '#111';
+  X.beginPath(); X.arc(4.3, -5.7, 1.3, 0, Math.PI * 2); X.fill();
+  X.beginPath(); X.arc(0.3, -5.7, 1.1, 0, Math.PI * 2); X.fill();
+  X.fillStyle = '#fff';
+  X.beginPath(); X.arc(4.6, -6.3, 0.5, 0, Math.PI * 2); X.fill();
 
-  // ── NOSE ──
-  X.fillStyle = '#8B4513';
-  X.beginPath(); X.ellipse(9 * s, -6 * s, 1.5 * s, 1 * s, 0, 0, Math.PI * 2); X.fill();
+  // Nose
+  X.fillStyle = '#7a3a10';
+  X.beginPath(); X.ellipse(6.5, -4.5, 1.2, 0.8, 0, 0, Math.PI * 2); X.fill();
 
-  // ── WHISKERS ──
-  X.strokeStyle = 'rgba(80,40,0,.4)';
-  X.lineWidth = 0.5 * s;
-  X.beginPath(); X.moveTo(9 * s, -5 * s); X.lineTo(15 * s, -7 * s); X.stroke();
-  X.beginPath(); X.moveTo(9 * s, -5 * s); X.lineTo(15 * s, -4 * s); X.stroke();
-  X.beginPath(); X.moveTo(9 * s, -5 * s); X.lineTo(14 * s, -1 * s); X.stroke();
-
-  // ── MOUTH ──
-  X.strokeStyle = '#8B4513';
-  X.lineWidth = 0.7 * s;
-  X.beginPath();
-  X.arc(8 * s, -4 * s, 2 * s, 0.2, Math.PI - 0.2);
-  X.stroke();
+  // Legs
+  X.fillStyle = '#b86208';
+  const legOff = Math.sin(frame * 0.06 + sq.phase) * 1.5;
+  X.beginPath(); X.ellipse(-2, s * 0.7 + legOff, 3, 2, 0.2, 0, Math.PI * 2); X.fill();
+  X.beginPath(); X.ellipse(3, s * 0.7 - legOff, 3, 2, -0.2, 0, Math.PI * 2); X.fill();
 
   X.restore();
 }
 
-// ── WIN/LOSE SCREENS ──
-function showWin() {
-  document.getElementById('hud').classList.add('hide');
-  document.getElementById('toolbar').classList.add('hide');
-  document.getElementById('tut').classList.add('hide');
-
-  const stars = calcStars();
-  const starsEl = document.getElementById('win-stars');
-  starsEl.innerHTML = '';
-  for (let i = 0; i < 3; i++) {
-    const s = document.createElement('div');
-    s.className = 'star-icon' + (i < stars ? '' : ' off');
-    s.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14 2 9.27l6.91-1.01z" fill="#ffd700" stroke="#b8860b" stroke-width="0.5"/></svg>';
-    starsEl.appendChild(s);
+// ── SHOP UI ──
+function buildShop() {
+  const shop = document.getElementById('shop');
+  shop.innerHTML = '';
+  for (const u of upgrades) {
+    const cost = getCost(u);
+    const card = document.createElement('div');
+    card.className = 'card' + (nuts >= cost ? ' affordable' : '');
+    card.innerHTML = `
+      <div class="card-lvl">Lv.${u.level}</div>
+      <div class="card-ico">${u.ico}</div>
+      <div class="card-name">${u.name}</div>
+      <div class="card-desc">${u.desc}</div>
+      <div class="card-cost">🌰 ${fmtNum(cost)}</div>
+    `;
+    card.addEventListener('click', () => buyUpgrade(u));
+    shop.appendChild(card);
   }
-
-  document.getElementById('win-info').textContent =
-    `Белок спасено: ${savedCount}/${LV.totalSquirrels} | Макс. комбо: x${maxCombo + 1} | Время: ${Math.floor(time)}с`;
-
-  document.getElementById('scr-win').classList.remove('hide');
 }
 
-function showLose() {
-  document.getElementById('hud').classList.add('hide');
-  document.getElementById('toolbar').classList.add('hide');
-  document.getElementById('tut').classList.add('hide');
-  document.getElementById('lose-info').textContent =
-    `Спасено ${savedCount} из ${LV.needToWin} необходимых. Потеряно: ${lostCount}`;
-  document.getElementById('scr-lose').classList.remove('hide');
-}
-
-function calcStars() {
-  let s = 0;
-  if (savedCount >= LV.needToWin) s++;
-  if (lostCount === 0) s++;
-  if (time <= LV.timeLimitStar3) s++;
-  return s;
-}
-
-// ── INPUT ──
-let pointerDown = false;
-let pointerPos = null;
-let longPressTimer = null;
-
-C.addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  const [wx, wy] = toWorld(e.clientX, e.clientY);
-  pointerDown = true;
-  pointerPos = [wx, wy];
-  ghostPos = [wx, wy];
-
-  // Long press to remove
-  longPressTimer = setTimeout(() => {
-    if (pointerDown) {
-      removeItem(wx, wy);
+function refreshShop() {
+  const cards = document.querySelectorAll('.card');
+  let i = 0;
+  for (const u of upgrades) {
+    if (cards[i]) {
+      const cost = getCost(u);
+      cards[i].className = 'card' + (nuts >= cost ? ' affordable' : '');
+      cards[i].querySelector('.card-lvl').textContent = 'Lv.' + u.level;
+      cards[i].querySelector('.card-cost').innerHTML = '🌰 ' + fmtNum(cost);
     }
-  }, 600);
-});
-
-C.addEventListener('pointermove', (e) => {
-  e.preventDefault();
-  const [wx, wy] = toWorld(e.clientX, e.clientY);
-  ghostPos = [wx, wy];
-  if (pointerDown) {
-    clearTimeout(longPressTimer);
+    i++;
   }
-});
+}
 
-C.addEventListener('pointerup', (e) => {
+function buyUpgrade(u) {
+  const cost = getCost(u);
+  if (nuts < cost) return;
+  nuts -= cost;
+  u.level++;
+  u.effect();
+  refreshShop();
+  showNotif(`${u.ico} ${u.name} → Lv.${u.level}`);
+}
+
+// ── TAP HANDLING ──
+const tapZone = document.getElementById('tap-zone');
+
+function handleTap(ex, ey) {
+  const amount = nutsPerClick;
+  nuts += amount;
+
+  // Float text
+  const ft = document.createElement('div');
+  ft.className = 'float-text';
+  ft.textContent = '+' + fmtNum(amount);
+  ft.style.left = ex + rand(-20, 20) + 'px';
+  ft.style.top = ey - 20 + 'px';
+  document.body.appendChild(ft);
+  setTimeout(() => ft.remove(), 950);
+
+  // Click particles
+  for (let i = 0; i < 5; i++) {
+    clickParticles.push({
+      x: ex, y: ey,
+      vx: rand(-3, 3), vy: rand(-5, -1),
+      r: rand(2, 5),
+      color: ['#ffd700','#ffb300','#ff8f00','#fff8e1'][Math.floor(rand(0,4))],
+      life: 1
+    });
+  }
+
+  // Shake tree leaves
+  spawnFallingLeaves(2);
+
+  // Subtle tree shake via canvas — handled in render
+}
+
+tapZone.addEventListener('click', (e) => handleTap(e.clientX, e.clientY));
+tapZone.addEventListener('touchstart', (e) => {
   e.preventDefault();
-  clearTimeout(longPressTimer);
-  if (pointerDown && ghostPos) {
-    const [wx, wy] = toWorld(e.clientX, e.clientY);
-    if (phase === 'run' && selectedTool) {
-      placeItem(wx, wy);
+  const t = e.touches[0];
+  handleTap(t.clientX, t.clientY);
+}, {passive: false});
+
+function spawnFallingLeaves(n) {
+  const cx = W * 0.5;
+  const topY = H * (0.88 - treeHeight) + 20;
+  for (let i = 0; i < n; i++) {
+    fallingLeaves.push({
+      x: cx + rand(-40, 40),
+      y: topY + rand(-10, 30),
+      vx: rand(-0.8, 0.8),
+      vy: rand(0.5, 1.5),
+      vr: rand(-0.05, 0.05),
+      rot: rand(0, Math.PI * 2),
+      life: 1,
+      phase: rand(0, 10),
+      color: ['#2d8a3e','#45c458','#8BC34A','#66BB6A','#FDD835'][Math.floor(rand(0,5))]
+    });
+  }
+}
+
+// ── NOTIFICATION ──
+function showNotif(text) {
+  const el = document.createElement('div');
+  el.className = 'notif';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2100);
+}
+
+// ── HUD ──
+function updateHUD() {
+  document.getElementById('r-nuts').textContent = fmtNum(nuts);
+  document.getElementById('r-sq').textContent = fmtNum(nutsPerSec);
+}
+
+// ── SAVE / LOAD ──
+function saveGame() {
+  const data = {
+    nuts, nutsPerClick, treeLevel, treeHeight, treeBranches, leafCount,
+    levels: upgrades.map(u => u.level),
+    squirrelCount: squirrelSlots.length
+  };
+  try { localStorage.setItem('belkin_les', JSON.stringify(data)); } catch(e) {}
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem('belkin_les');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    nuts = data.nuts || 0;
+    for (let i = 0; i < upgrades.length; i++) {
+      upgrades[i].level = (data.levels && data.levels[i]) || 0;
     }
-  }
-  pointerDown = false;
-});
-
-// Keyboard rotation
-addEventListener('keydown', (e) => {
-  if (e.key === 'q' || e.key === 'Q' || e.key === 'й' || e.key === 'Й') ghostAngle -= 0.15;
-  if (e.key === 'e' || e.key === 'E' || e.key === 'у' || e.key === 'У') ghostAngle += 0.15;
-});
-
-// Touch rotation via two-finger or swipe on toolbar area — simplified: use buttons
-// For mobile, add rotation buttons
-document.addEventListener('DOMContentLoaded', () => {
-  // Extra rotation area could go here
-});
-
-// ── BUTTON BINDINGS ──
-document.getElementById('btn-start').addEventListener('click', () => {
-  document.getElementById('scr-start').classList.add('hide');
-  buildBg();
-  initGame();
-});
-
-document.getElementById('btn-retry-w').addEventListener('click', () => {
-  document.getElementById('scr-win').classList.add('hide');
-  initGame();
-});
-
-document.getElementById('btn-retry-l').addEventListener('click', () => {
-  document.getElementById('scr-lose').classList.add('hide');
-  initGame();
-});
+    // Replay effects
+    for (const u of upgrades) {
+      if (u.level > 0) {
+        // Re-apply effects without adding squirrels — rebuild manually
+        if (u.id === 'click') nutsPerClick = 1 + u.level;
+        if (u.id === 'branch') { treeBranches = 3 + u.level * 2; leafCount = 12 + u.level * 5; }
+        if (u.id === 'tree') { treeLevel = 1 + u.level; treeHeight = Math.min(0.75, 0.4 + u.level * 0.06); }
+      }
+    }
+    rebuildTree();
+    // Restore squirrels
+    const sqCount = data.squirrelCount || upgrades.find(u=>u.id==='squirrel').level;
+    squirrelSlots = [];
+    for (let i = 0; i < sqCount; i++) addSquirrel();
+    recalcPS();
+  } catch(e) {}
+}
 
 // ── MAIN LOOP ──
-let lastTime = 0;
+let lastSave = 0;
+let lastIdle = 0;
+
 function loop(ts) {
-  const dt = Math.min((ts - lastTime) / 1000, 0.05);
-  lastTime = ts;
+  frame++;
 
-  if (phase === 'run') {
-    time += dt;
-    updatePhysics(dt);
-    updateHUD();
+  // Idle income (every ~100ms for smoothness)
+  if (ts - lastIdle > 100) {
+    const dt = (ts - lastIdle) / 1000;
+    nuts += nutsPerSec * dt;
+    lastIdle = ts;
 
-    // Tutorial timer
-    if (tutTimer > 0) {
-      tutTimer -= dt;
-      if (tutTimer <= 0) document.getElementById('tut').classList.add('hide');
+    // Occasional leaf drop
+    if (nutsPerSec > 0 && Math.random() < 0.05) {
+      spawnFallingLeaves(1);
     }
   }
 
-  frameCount++;
+  // Cap particles to avoid lag
+  if (fallingLeaves.length > 30) fallingLeaves.splice(0, fallingLeaves.length - 30);
+  if (clickParticles.length > 25) clickParticles.splice(0, clickParticles.length - 25);
+
   render();
+  updateHUD();
+  refreshShop();
+
+  // Auto-save every 5s
+  if (ts - lastSave > 5000) { saveGame(); lastSave = ts; }
+
   requestAnimationFrame(loop);
 }
+
+// ── INIT ──
+loadGame();
+buildShop();
 requestAnimationFrame(loop);
 
 </script>
